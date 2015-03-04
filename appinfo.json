@@ -1,0 +1,26 @@
+{
+    "appKeys": {
+        "ITEM_IDS": 4,
+        "ITEM_NAMES": 3,
+        "PROJECT_IDs": 1,
+        "PROJECT_NAMES": 0,
+        "selectedproject": 2
+    },
+    "capabilities": [
+        "location"
+    ],
+    "companyName": "bradpaugh@gmail.com",
+    "longName": "FirstProject",
+    "projectType": "native",
+    "resources": {
+        "media": []
+    },
+    "sdkVersion": "2",
+    "shortName": "FirstProject",
+    "uuid": "156ab4ed-c65c-4dca-ab42-af435f784aa1",
+    "versionCode": 1,
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": false
+    }
+}
