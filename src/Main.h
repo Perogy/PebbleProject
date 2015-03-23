@@ -2,52 +2,41 @@
 #define _MAIN_H_
     
 #include <pebble.h>
+#include "ErrorWindow.h"
+
 #define PROJECT_NAMES 0
 #define PROJECT_IDs 1
-#define SELECTED_ITEM 2
+#define SELECTED_PROJECT 2
 #define ITEM_NAMES 3
 #define ITEM_IDS 4
+#define SELECTED_ITEM 5 
+//informs us that we are waiting for javascript to complete something (generally means to show a "loading" window).
+#define WAITING 6
+    
+#define TEXT_SCROLL_INTERVAL 300
 
-Window* window;
-MenuLayer* myMenuLayer;
+#define CIRCLE_RADIUS 8
 
-//the current list of all the projects
-typedef struct proj
-{
-    char** projects;
-    char** projectIDs;
-    int length;
-} projectStruct;
+extern Window* window;
+extern MenuLayer* myMenuLayer;
 
-//The current list of all the items
-typedef struct item
-{
-    char** items;
-    char** itemIDs;
-    int length;
-} itemStruct;
+extern int scrolledNumber;
+extern bool scrollable;
+extern int pageDepth;
 
-typedef struct layer
-{
-    Layer** checkboxLayer;
-    GRect** checkboxFrame;
-    GRect** checkboxRect;
-    int length;
-} itemCheckboxLayer;
-
-projectStruct* projectList;
-itemStruct* itemList;
-itemCheckboxLayer* checkboxList;
+extern AppTimer* textScrollTimer;
 
 void sendProjectIDToPhone(int index);
+void cleanupCheckboxList();
+void sendItemIDToPhone(int index);
 void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, void *callback_context);
 uint16_t num_rows_callback(MenuLayer *menu_layer, uint16_t section_index, void *callback_context);
-void unSerializeProjectsString(char* projectNamesString, char* projectIDsString);
-void unSerializeItemsString(char* itemNamesString, char* itemIDsString);
+void checkCheckbox(GContext *ctx, Layer* cell_layer, int index);
 void config_provider(Window *window);
 void window_load(Window *window);
 void window_unload(Window *window);
 void init();
 void deinit();
+void scrollTextBackToStart();
 
 #endif

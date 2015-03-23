@@ -4,10 +4,13 @@
         "ITEM_NAMES": 3,
         "PROJECT_IDs": 1,
         "PROJECT_NAMES": 0,
-        "selectedproject": 2
+        "SELECTED_ITEM": 5,
+        "SELECTED_PROJECT": 2,
+        "WAITING": 6
     },
     "capabilities": [
-        "location"
+        "location",
+        "configurable"
     ],
     "companyName": "bradpaugh@gmail.com",
     "longName": "FirstProject",
