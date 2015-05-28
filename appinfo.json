@@ -1,5 +1,7 @@
 {
     "appKeys": {
+        "CONFIG": 8,
+        "ERROR": 7,
         "ITEM_IDS": 4,
         "ITEM_NAMES": 3,
         "PROJECT_IDs": 1,
@@ -13,15 +15,18 @@
         "configurable"
     ],
     "companyName": "bradpaugh@gmail.com",
-    "longName": "FirstProject",
+    "longName": "Todoist Time",
     "projectType": "native",
     "resources": {
         "media": []
     },
-    "sdkVersion": "2",
-    "shortName": "FirstProject",
+    "sdkVersion": "3",
+    "shortName": "Todoist Time",
+    "targetPlatforms": [
+        "aplite",
+        "basalt"
+    ],
     "uuid": "156ab4ed-c65c-4dca-ab42-af435f784aa1",
-    "versionCode": 1,
     "versionLabel": "1.0",
     "watchapp": {
         "watchface": false

@@ -11,13 +11,18 @@
 itemCheckboxLayer* checkboxList = 0;
 int scrolledNumber = 0;
 bool scrollable = 0;
+int selectedProjectIndex;
+
+GColor backgroundColor;
+GColor altBackgroundColor;
+GColor highlightColor;
 
 Window* window;
 MenuLayer* myMenuLayer;
 AppTimer* textScrollTimer;
 
-//page depth 1 = projects display page depth 2 = items for the project
-int pageDepth = 1;
+//page depth 1 = projects, page depth 2 = items for the selected project
+int pageDepth;
     
 //sends the project ID at specified index to the phone to get itemlist
 void sendProjectIDToPhone(int index)
@@ -58,41 +63,13 @@ void sendItemIDToPhone(int index)
 //draws a checkbox in the given cell layer of the menu
 void drawCheckbox(GContext *ctx, Layer *cell_layer, int index)
 {
-    
-    //run this initializing code if checkboxList is set to 0.. maybe this code should be outside of the draw function somewhere
-    if (checkboxList->checkboxFrame[index].size.w == 0)
-    {
-        
-        //draw Rect
-        /*GRect cellBounds = layer_get_bounds(cell_layer);
-        GRect G = GRect(cellBounds.size.w*.80, 0, cellBounds.size.w-(cellBounds.size.w*.85), cellBounds.size.h);
-        checkboxList->checkboxFrame[index].size.w = G.size.w;
-        checkboxList->checkboxFrame[index].size.h = G.size.h;
-        checkboxList->checkboxFrame[index].origin.x = G.origin.x;
-        checkboxList->checkboxFrame[index].origin.y = G.origin.y;
-        //checkboxList->checkboxLayer[index] = layer_create(checkboxList->checkboxFrame[index]);
-        G = GRect(checkboxList->checkboxFrame[index].origin.x, checkboxList->checkboxFrame[index].origin.y+(checkboxList->checkboxFrame[index].size.h*.25), 
-                  checkboxList->checkboxFrame[index].size.w*.90, checkboxList->checkboxFrame[index].size.h*.50);
-        checkboxList->checkboxRect[index].size.w = G.size.w;
-        checkboxList->checkboxRect[index].size.h = G.size.h;
-        checkboxList->checkboxRect[index].origin.x = G.origin.x;
-        checkboxList->checkboxRect[index].origin.y = G.origin.y;*/
-    }
-    
-    //snprintf(asdf, 100, "\nwhat the derp is going on %d\n", checkboxList->checkboxFrame[index].size.w);
-    //displayErrorMessage(asdf);
-    //layer_add_child(cell_layer, checkboxList->checkboxLayer[index]);
-    
     graphics_context_set_fill_color(ctx, GColorWhite);
-    //draw Circle
     GRect cellBounds = layer_get_bounds(cell_layer);
-    //make this scalable
-    int radius = 8;
-    GPoint g = GPoint(cellBounds.size.w*.80 + radius, cellBounds.size.h/2.0);
+    GPoint g = GPoint(cellBounds.size.w*.80 + CIRCLE_RADIUS, cellBounds.size.h/2.0);
+    #ifdef PBL_COLOR
+        graphics_context_set_antialiased(ctx, true);
+    #endif
     graphics_draw_circle(ctx, g, CIRCLE_RADIUS);
-    
-    //graphics_fill_rect(ctx, checkboxList->checkboxFrame[index], 0, GCornerNone);
-    //graphics_draw_rect(ctx, checkboxList->checkboxRect[index]);
 }
 
 //draws a dot inside the checkbox to mark as "checked"
@@ -100,22 +77,41 @@ void checkCheckbox(GContext *ctx, Layer *cell_layer, int index)
 {
     WindowData* wd = (WindowData*)window_get_user_data(window);
     if (wd->items->checked[index] == 1)
-    {
-        //Check Rect
-        /*GRect temp = checkboxList->checkboxRect[index];
-        temp.origin.x = temp.origin.x + 5;
-        temp.origin.y = temp.origin.y + 5;
-        temp.size.w = temp.size.w - 10;
-        temp.size.h = temp.size.h - 10;
-        graphics_context_set_fill_color(ctx, GColorBlack);
-        graphics_fill_rect(ctx, temp, 0, GCornerNone);*/
-        
-        //Check Circle
+    {   
         graphics_context_set_fill_color(ctx, GColorBlack);
         GRect cellBounds = layer_get_bounds(cell_layer);
         GPoint g = GPoint(cellBounds.size.w*.80 + CIRCLE_RADIUS, cellBounds.size.h/2.0);
-        graphics_fill_circle(ctx, g, CIRCLE_RADIUS-4);
+        graphics_fill_circle(ctx, g, CIRCLE_RADIUS/2.0);
     }
+}
+
+void draw_header_callback(GContext *ctx, Layer *cell_layer, uint16_t section_index, void *callback_context)
+{
+    //menu_cell_basic_header_draw(ctx, cell_layer, "Projects");
+    if (pageDepth == 1)
+    {
+        GRect cellBounds = layer_get_bounds(cell_layer);
+        graphics_draw_text(ctx, "Projects", fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+        graphics_context_set_stroke_color(ctx, GColorBlack);
+        graphics_draw_line(ctx,GPoint(cellBounds.origin.x,cellBounds.origin.y+cellBounds.size.h-1), GPoint(cellBounds.origin.x+cellBounds.size.w, cellBounds.origin.y+cellBounds.size.h-1));
+    }
+    else
+    {
+        WindowData* wd = (WindowData*)window_get_user_data(window);
+        GRect cellBounds = layer_get_bounds(cell_layer);
+        graphics_draw_text(ctx, wd->projects->projects[selectedProjectIndex], fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+        graphics_context_set_stroke_color(ctx, GColorBlack);
+        graphics_draw_line(ctx,GPoint(cellBounds.origin.x,cellBounds.origin.y+cellBounds.size.h-1), GPoint(cellBounds.origin.x+cellBounds.size.w, cellBounds.origin.y+cellBounds.size.h-1));
+    }
+    
+}
+
+static int16_t menu_get_header_height_callback(MenuLayer *menu_layer, uint16_t section_index, void *data) {
+  return 30;
+}
+
+static uint16_t menu_get_num_sections_callback(MenuLayer *menu_layer, void *data) {
+  return 1;
 }
 
 //this is executed when row is changed.
@@ -135,18 +131,45 @@ void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, 
                 {
                     GRect cellBounds = layer_get_bounds(cell_layer);
                     graphics_context_set_text_color(ctx, GColorBlack);
-                    graphics_context_set_fill_color(ctx, GColorWhite);
-                    graphics_fill_rect(ctx, cellBounds, 0, GCornerNone);
                     
                     MenuIndex currentIndex = menu_layer_get_selected_index(myMenuLayer);
                     int currentRow = currentIndex.row;
+                    
+                    #ifdef PBL_COLOR
+                        if (cell_index->row == currentRow)
+                        {
+                            graphics_context_set_text_color(ctx, wd->config->highlightForegroundColor);
+                            graphics_context_set_fill_color(ctx, wd->config->highlightBackgroundColor);
+                        }
+                        else
+                        {
+                            if(i%2 == 0)
+                            {
+                                graphics_context_set_text_color(ctx, wd->config->foregroundColor);
+                                graphics_context_set_fill_color(ctx, wd->config->backgroundColor);
+                            }  
+                            else
+                            {
+                                graphics_context_set_text_color(ctx, wd->config->altForegroundColor);
+                                graphics_context_set_fill_color(ctx, wd->config->altBackgroundColor);
+                            }
+                        }
+                    #else
+                        graphics_context_set_fill_color(ctx, GColorWhite);
+                    #endif
+                    graphics_fill_rect(ctx, cellBounds, 0, GCornerNone);
+                    
+                    
                     //if selected
                     if (cell_index->row == currentRow)
                     {
+                        //increase cellbounds size so we can tell if the text will "overflow". if you dont do this the content size will stop at the end of the bounds
+                        cellBounds.size.w = cellBounds.size.w*2.0;
                         GSize textSize = graphics_text_layout_get_content_size(wd->projects->projects[i], fonts_get_system_font(FONT_KEY_GOTHIC_24), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
+                        cellBounds.size.w = cellBounds.size.w/2.0;
                         //snprintf(asdf, 100, "%d", textSize.w);
                         //displayErrorMessage(asdf);
-                        if (textSize.w > (cellBounds.size.w*.90))
+                        if (textSize.w > cellBounds.size.w)
                         {
                             scrollable = 1;
                         }
@@ -175,11 +198,34 @@ void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, 
                     //GRect newBounds = GRect(cellBounds.origin.x, cellBounds.origin.y, cellBounds.size.w*.80, cellBounds.size.h);
                     //layer_set_bounds(cell_layer, newBounds);
                     graphics_context_set_text_color(ctx, GColorBlack);
-                    graphics_context_set_fill_color(ctx, GColorWhite);
-                    graphics_fill_rect(ctx, cellBounds, 0, GCornerNone);
                     
                     MenuIndex currentIndex = menu_layer_get_selected_index(myMenuLayer);
                     int currentRow = currentIndex.row;
+                    
+                    #ifdef PBL_COLOR
+                        if (cell_index->row == currentRow)
+                        {
+                            graphics_context_set_text_color(ctx, wd->config->highlightForegroundColor);
+                            graphics_context_set_fill_color(ctx, wd->config->highlightBackgroundColor);
+                        }
+                        else
+                        {
+                            if(i%2 == 0)
+                            {
+                                graphics_context_set_text_color(ctx, wd->config->foregroundColor);
+                                graphics_context_set_fill_color(ctx, wd->config->backgroundColor);
+                            }  
+                            else
+                            {
+                                graphics_context_set_text_color(ctx, wd->config->altForegroundColor);
+                                graphics_context_set_fill_color(ctx, wd->config->altBackgroundColor);
+                            }
+                        }
+                    #else
+                        graphics_context_set_fill_color(ctx, GColorWhite);
+                    #endif
+                    graphics_fill_rect(ctx, cellBounds, 0, GCornerNone);
+
                     //if selected
                     if (cell_index->row == currentRow)
                     {
@@ -271,17 +317,6 @@ void timerTick(void* data)
     textScrollTimer = app_timer_register(TEXT_SCROLL_INTERVAL, timerTick, NULL);
 }
 
-
-
-void cleanupCheckboxList()
-{
-    free(checkboxList->checkboxLayer);
-    free(checkboxList->checkboxFrame);
-    free(checkboxList->checkboxRect);
-    free(checkboxList->checked);
-    free(checkboxList);
-}
-
 void scrollTextBackToStart()
 {
     MenuIndex currentIndex = menu_layer_get_selected_index(myMenuLayer);
@@ -316,6 +351,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     char* projectIDsStr = 0;
     char* itemNamesStr = 0;
     char* itemIDsStr = 0;
+    char* configStr = 0;
     WindowData* wd = (WindowData*)window_get_user_data(window);
     
     // For all items
@@ -339,7 +375,6 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
             case ITEM_IDS:
                 itemIDsStr = (char*)calloc(t->length, sizeof(char));
                 strcpy(itemIDsStr, t->value->cstring);
-                
             break;
             case SELECTED_ITEM:
                 
@@ -348,6 +383,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
                     MenuIndex currentIndex = menu_layer_get_selected_index(myMenuLayer);
                     int currentRow = currentIndex.row;
                     wd->items->checked[currentRow] = 1;
+                    window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
                     layer_mark_dirty(menu_layer_get_layer(myMenuLayer));
                 }
                 else
@@ -365,6 +401,24 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
                     displayMessage("Loading Projects...", 102);
                 }
             break;
+            case ERROR:
+                if (t->value->int32 == 1)
+                {
+                    displayMessage("Login info was incorrect. Popping up the config window so you can try again.", 101);
+                    
+                }
+            break;
+            case CONFIG:
+                configStr = (char*)calloc(t->length, sizeof(char));
+                strcpy(configStr, t->value->cstring);
+                WindowData* wd = window_get_user_data(window);
+                setConfig(configStr, wd->config);
+                #ifdef PBL_COLOR
+                    window_set_background_color(window, wd->config->backgroundColor);
+                    menu_layer_set_normal_colors(myMenuLayer, wd->config->backgroundColor, wd->config->foregroundColor);
+                #endif
+                layer_mark_dirty(menu_layer_get_layer(myMenuLayer));
+            break;
             default:
                 displayMessage("Error: Unrecognized key in received data.", 101);
             break;
@@ -377,8 +431,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     {
         ProjectStruct* projectList = createEmptyProjectList();
         unSerializeProjectsString(projectList, projectNamesStr, projectIDsStr);
-        WindowData* createdWD = createWindowData(projectList);
-        window_set_user_data(window, createdWD);
+        WindowData* wd = window_get_user_data(window);
+        setProjects(wd, projectList);
         menu_layer_reload_data(myMenuLayer);
         MenuIndex mi;
         mi.row = 0;
@@ -389,18 +443,22 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         textScrollTimer = app_timer_register(TEXT_SCROLL_INTERVAL, timerTick, NULL);
         free(projectNamesStr);
         free(projectIDsStr);
-        //pop the loading screen off the window stack
-        if (window_stack_contains_window(errorWindow))
+        
+        //pop the loading screen (or screens) off the window stack
+        while (window_stack_get_top_window() != window)
+        {
             window_stack_pop(1);
+        }
+
     }
     if (itemNamesStr)
     {
         ItemStruct* itemList = createEmptyItemList();
         unSerializeItemsString(itemList, itemNamesStr, itemIDsStr);
-
-        if (wd->items)
-            destroyItemList(wd->items);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "\nfinished unserialize items");
         wd->items = itemList;
+        
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "\nfinished itemlist assigning");
         
         if (itemList->length == 0)
         {
@@ -409,24 +467,21 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
             free(itemIDsStr);
             return;
         }
-        //initialize item checkboxes
-        checkboxList = (itemCheckboxLayer*)malloc(sizeof(itemCheckboxLayer));
-        checkboxList->checkboxLayer = (Layer**)calloc(sizeof(Layer*),itemList->length);
-        checkboxList->checkboxFrame = (GRect*)calloc(sizeof(GRect),itemList->length);
-        checkboxList->checkboxRect = (GRect*)calloc(sizeof(GRect),itemList->length);
-        checkboxList->checked = (int*)calloc(sizeof(int),itemList->length);
-        checkboxList->length = itemList->length;
+        
+        pageDepth = 2;
+        menu_layer_reload_data(myMenuLayer);
         MenuIndex mi;
         mi.row = 0;
         mi.section = 0;
         menu_layer_set_selected_index(myMenuLayer, mi, MenuRowAlignCenter, true);
-        pageDepth = 2;
-        menu_layer_reload_data(myMenuLayer);
         free(itemNamesStr);
         free(itemIDsStr);
-        //pop the loading screen off the window stack
-        if (window_stack_contains_window(errorWindow))
+        //pop the loading screen (or screens) off the window stack
+        while (window_stack_get_top_window() != window)
+        {
             window_stack_pop(1);
+        }
+        textScrollTimer = app_timer_register(TEXT_SCROLL_INTERVAL, timerTick, NULL);
     }
     
 }
@@ -459,15 +514,28 @@ void config_provider(Window *window)
 
 void window_load(Window *window)
 {
-    myMenuLayer = menu_layer_create(GRect(0, 0, 144, 168 - 16));
+    myMenuLayer = menu_layer_create(GRect(0, 0, 144, 168));
     //removed this as we need a custom back button function
     //menu_layer_set_click_config_onto_window(myMenuLayer, window);
-    window_set_user_data(window, 0);
+    
+    Config* config = (Config*)malloc(sizeof(Config));
+    loadPersistentConfig(config);
+    
+    WindowData* wd = createWindowData(config);
+    window_set_user_data(window, wd);
+    #ifdef PBL_COLOR
+        window_set_background_color(window, config->backgroundColor);
+        menu_layer_set_normal_colors(myMenuLayer, config->backgroundColor, config->foregroundColor);
+    #endif
+    pageDepth = 1;
     MenuLayerCallbacks callbacks = 
     {
         .draw_row = (MenuLayerDrawRowCallback) draw_row_callback,
+        .draw_header = (MenuLayerDrawHeaderCallback) draw_header_callback,
+        .get_num_sections = (MenuLayerGetNumberOfSectionsCallback)menu_get_num_sections_callback,
         .get_num_rows = (MenuLayerGetNumberOfRowsInSectionsCallback) num_rows_callback,
-        .get_cell_height = (MenuLayerGetCellHeightCallback) cell_height_callback
+        .get_cell_height = (MenuLayerGetCellHeightCallback) cell_height_callback,
+        .get_header_height = (MenuLayerGetHeaderHeightCallback) menu_get_header_height_callback
     };
     menu_layer_set_callbacks(myMenuLayer, NULL, callbacks);
 
@@ -480,13 +548,21 @@ void window_load(Window *window)
  
 void window_unload(Window *window)
 {
+    APP_LOG(APP_LOG_LEVEL_ERROR, "window unload called");
     WindowData* wd = (WindowData*)window_get_user_data(window);
     menu_layer_destroy(myMenuLayer);
-    destroyProjectList(wd->projects);
+    if (wd != 0)
+        destroyProjectList(wd->projects);
 }
 
 void init()
 {
+    persist_delete(1);
+    #ifdef PBL_COLOR
+        backgroundColor = GColorLightGray;
+        highlightColor = GColorRed;
+        altBackgroundColor = GColorDarkGray;
+    #endif
     //register networking callbacks
     app_message_register_inbox_received(inbox_received_callback);
     app_message_register_inbox_dropped(inbox_dropped_callback);
@@ -508,6 +584,8 @@ void init()
  
 void deinit()
 {
+    WindowData* wd = (WindowData*)window_get_user_data(window);
+    savePersistentConfig(wd->config);
     window_destroy(window);
 }
 

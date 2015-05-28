@@ -19,6 +19,9 @@ ProjectStruct* createProjectList(char** projects, char** projectIDs, int length)
 }
 void destroyProjectList(ProjectStruct* ps)
 {
+    if (ps==0)
+        return;
+    
     for(int i=0;i < ps->length;i++)
     {
         free(ps->projects[i]);

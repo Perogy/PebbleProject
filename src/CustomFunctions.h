@@ -6,5 +6,6 @@ void outputArrayContents(char** array, int arrayLength);
 char** splitString(char* str, char delimiter, int* length);
 void scrollTextByOneLetter(char* text);
 void loopingCopy(char* dst, char* src, int startIndex, int length);
+unsigned int HexStringToUInt(char const* hexstring);
 
 #endif

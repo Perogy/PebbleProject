@@ -11,7 +11,7 @@ var xhrRequest = function (url, type, callback) {
 function getItems(responseText)
 {
     console.log("IN Items");
-    // responseText contains a JSON object with weather info
+    // responseText contains a JSON object with item info
     var json = JSON.parse(responseText);
 
     console.log("\nitemresponse:" + responseText + "\n");
@@ -40,16 +40,21 @@ function getItems(responseText)
                           },
                           function(e) 
                           {
-                              console.log("Error sending weather info to Pebble!");
+                              console.log("Error sending info to Pebble!");
                           });   
 }
 
 function getToken(responseText) 
 {
-    // responseText contains a JSON object with weather info
+    // responseText contains a JSON object with token info
     var json = JSON.parse(responseText);
-
-    console.log("\nTOKEN RESPONSE: " + responseText);
+    if (responseText == "\"LOGIN_ERROR\"")
+    {
+        console.log("\ngot login error");
+        sendErrorMessage(1);
+        openConfig();
+        return;
+    }
     // Conditions
     var token = json.token;
     console.log("\ndat token:" + token + "\n");
@@ -60,7 +65,7 @@ function getToken(responseText)
 function getProjects(responseText)
 {
     console.log("IN PROJECTS");
-    // responseText contains a JSON object with weather info
+    // responseText contains a JSON object with project data
     var json = JSON.parse(responseText);
 
     // Conditions
@@ -88,7 +93,7 @@ function getProjects(responseText)
                           },
                           function(e) 
                           {
-                              console.log("Error sending weather info to Pebble!");
+                              console.log("Error sending info to Pebble!");
                           });   
 }
 
@@ -149,10 +154,28 @@ function sendWaitingMessage(code)
                           });   
 }
 
-function processTodoistData() 
+//code 1 = Login failed
+function sendErrorMessage(code)
+{
+    var dictionary = 
+        {
+            "ERROR": code
+        };
+        Pebble.sendAppMessage(dictionary,
+                          function(e) 
+                          {
+                              console.log("info sent to Pebble successfully!");
+                          },
+                          function(e) 
+                          {
+                              console.log("Error sending info to Pebble!");
+                          });   
+}
+
+function processTodoistData(email, password) 
 {
     var url = "https://todoist.com/API/login?email=" +
-    "bpaugh@hotmail.com" + "&password=" + "aragorn123";
+    email + "&password=" + password;
     //note that xhr request is ASYNCHRONOUS everything after it in this function will get executed
     //before it is even finished the next path of execution HAS to be in the callback function
     xhrRequest(url, 'GET', getToken);
@@ -195,16 +218,17 @@ Pebble.addEventListener('ready',
   function(e) {
     console.log("PebbleKit JS ready!");
     //temporary to test what happens when there is no token
-    localStorage.removeItem("token");
+    //localStorage.removeItem("token");
     if (localStorage.getItem("token") === null)
     {
         sendWaitingMessage(1);
+        console.log("Opening Config: token = " + localStorage.getItem("token"));
         openConfig();
     }
     else
     {
         sendWaitingMessage(2);
-        getProjectsFromToken();   
+        getProjectsFromToken(); 
     }
     //check if there is login information
     //check if token has expired
@@ -219,25 +243,82 @@ Pebble.addEventListener('appmessage',
     console.log("AppMessage received! " + e.payload.SELECTED_PROJECT + e.payload.SELECTED_ITEM);
     if(e.payload.SELECTED_PROJECT)
     {
-          getItemsForSelectedProject(e.payload.SELECTED_PROJECT);
+        console.log("PAYLOAD SELECTED PROJECT");
+        getItemsForSelectedProject(e.payload.SELECTED_PROJECT);
     }
     if(e.payload.SELECTED_ITEM)
     {
-          markItemAsCompleted(e.payload.SELECTED_ITEM);
+        console.log("PAYLOAD SELECTED ITEM");
+        markItemAsCompleted(e.payload.SELECTED_ITEM);
     }
   }                     
 );
 
+//sets the configuration options from the config page that the user has just saved.
+function setConfig(loginData)
+{
+    console.log("IN Config");
+    localStorage.setItem("ConfigData", JSON.stringify(loginData));
+    var configString = loginData.scrollSpeed + '|' + loginData.backgroundColor + '|' + loginData.foregroundColor + '|' + loginData.altBackgroundColor + '|' + loginData.altForegroundColor + '|' + loginData.highlightBackgroundColor + '|' + loginData.highlightForegroundColor + '|';
+    
+
+    console.log("configstring: " + configString + "\n");
+    var dictionary = 
+    {
+        "CONFIG": configString
+    };
+
+    // Send to Pebble
+    Pebble.sendAppMessage(dictionary,
+                          function(e) 
+                          {
+                              console.log("info sent to Pebble successfully!");
+                          },
+                          function(e) 
+                          {
+                              console.log("Error sending info to Pebble!");
+                          });   
+}
+
 function openConfig(e) {
-    // Show config page
-  Pebble.openURL('http://52.10.200.175/index.html');
+    //if (localStorage.getItem("ConfigData") === null)
+    //{
+        Pebble.openURL('http://52.10.200.175/index.html');
+    //}
+    //else
+    //{
+        //var configData = JSON.parse(localStorage.getItem("ConfigData"));
+        //console.log('\nconfig member:' + configData.backgroundColor);
+        //console.log('\nhttp://52.10.200.175/index.html#' + JSON.stringify(configData));
+        //Pebble.openURL('http://52.10.200.175/index.html#' + 'scrollSpeed=' + configData.scrollSpeed + '&backgroundColor=' + configData.backgroundColor + '&foregroundColor=' + configData.foregroundColor + '&altBackgroundColor=' + 
+        //                                                    configData.altBackgroundColor + '&altForegroundColor=' + configData.altForegroundColor + '&hightlightBackgroundColor=' + configData.highlightBackgroundColor + '&highlightForegroundColor=' + configData.highlightForegroundColor);  
+    //}
 }
 
 function closeConfig(e) {
-    //var configuration = JSON.parse(decodeURIComponent(e.response));
-    console.log('Configuration window returned: ' + e.response);
-      localStorage.setItem("googleToken", e.response);
-      processTodoistDataWithGoogle();
+    
+    var loginData = JSON.parse(decodeURIComponent(e.response));
+    console.log('Configuration window returned: ', JSON.stringify(loginData));
+    
+    if (loginData.type == "configData")
+    {
+        setConfig(loginData);
+        return;
+    }
+    
+    if (loginData.googleToken)
+    {
+        //check whether google or normal login and then run appropriate code
+        localStorage.setItem("googleToken", loginData.token);
+        sendWaitingMessage(2);
+        processTodoistDataWithGoogle();
+    }
+    else
+    {
+        sendWaitingMessage(2);
+        processTodoistData(loginData.email, loginData.password);
+    }
+
 }
 // Listen for a configuration request
 Pebble.addEventListener('showConfiguration', openConfig);

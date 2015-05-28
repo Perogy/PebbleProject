@@ -1,4 +1,5 @@
 #include <pebble.h>
+#include <ctype.h>
 
 char* getSubString(char* str, int startIndex, int endIndex)
 {
@@ -57,6 +58,30 @@ void scrollTextByOneLetter(char* text)
         text[i] = text[i+1];
     }
     text[length-1] = tmp;
+}
+
+//credit to KevinCooper from pebble forums
+unsigned int HexStringToUInt(char const* hexstring)
+{
+    unsigned int result = 0;
+    char const *c = hexstring;
+    unsigned char thisC;
+    while( (thisC = *c) != 0 )
+    {
+        thisC = toupper(thisC);
+        result <<= 4;
+        if( isdigit(thisC))
+            result += thisC - '0';
+        else if(isxdigit(thisC))
+            result += thisC - 'A' + 10;
+        else
+        {
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "ERROR: Unrecognised hex character \"%c\"", thisC);
+            return 0;
+        }
+        ++c;
+    }
+    return result;  
 }
 
 //this will copy a substring from src to dst and if it hits the end of the string it will loop

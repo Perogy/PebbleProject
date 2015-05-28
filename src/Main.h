@@ -2,7 +2,6 @@
 #define _MAIN_H_
     
 #include <pebble.h>
-#include "ErrorWindow.h"
 
 #define PROJECT_NAMES 0
 #define PROJECT_IDs 1
@@ -12,8 +11,11 @@
 #define SELECTED_ITEM 5 
 //informs us that we are waiting for javascript to complete something (generally means to show a "loading" window).
 #define WAITING 6
+//an error happened in javascript
+#define ERROR 7
+#define CONFIG 8
     
-#define TEXT_SCROLL_INTERVAL 300
+#define TEXT_SCROLL_INTERVAL 150
 
 #define CIRCLE_RADIUS 8
 
@@ -23,6 +25,7 @@ extern MenuLayer* myMenuLayer;
 extern int scrolledNumber;
 extern bool scrollable;
 extern int pageDepth;
+extern int selectedProjectIndex;
 
 extern AppTimer* textScrollTimer;
 
@@ -33,6 +36,7 @@ void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, 
 uint16_t num_rows_callback(MenuLayer *menu_layer, uint16_t section_index, void *callback_context);
 void checkCheckbox(GContext *ctx, Layer* cell_layer, int index);
 void config_provider(Window *window);
+void timerTick(void* data);
 void window_load(Window *window);
 void window_unload(Window *window);
 void init();

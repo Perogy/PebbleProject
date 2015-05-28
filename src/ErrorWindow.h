@@ -15,10 +15,7 @@
 #define NON_FATAL 101
 #define LOADING 102
 
-Window* errorWindow;
-TextLayer* errorTextLayer;
-ScrollLayer* errorScrollLayer;
-AppTimer* loadingTimeoutTimer;
+//Window* errorWindow;
 
 void displayMessage(char* errorMessage, int type);
 void loadingScreenTimer(void* data);

@@ -8,7 +8,7 @@ typedef struct item
 {
     char** items;
     char** itemIDs;
-    int* checked;
+    bool* checked;
     int length;
 } ItemStruct;
 
