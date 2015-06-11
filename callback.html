@@ -3,6 +3,8 @@
 <head>
 <script>
 
+var token;
+
 var xhrRequest = function (url, type, callback) {
 	  var xhr = new XMLHttpRequest();
 	  xhr.onload = function () {
@@ -37,7 +39,7 @@ function getEmailFromGoogle(responseText)
 
 function run()
 {
-    var token = getUrlParameter('access_token');
+    token = getUrlParameter('access_token');
 	var email = xhrRequest('https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + token, 'GET', getEmailFromGoogle);
 
 }
