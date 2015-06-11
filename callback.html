@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+var xhrRequest = function (url, type, callback) {
+	  var xhr = new XMLHttpRequest();
+	  xhr.onload = function () {
+	    callback(this.responseText);
+	  };
+	  xhr.open(type, url);
+	  xhr.send();
+	};
+
+function getUrlParameter(sParam)
+{
+    console.log(window.location);
+    var sPageURL = window.location.hash.substring(1);
+    var sURLVariables = sPageURL.split('&');
+    console.log(sURLVariables);
+    for (var i = 0; i < sURLVariables.length; i++) 
+    {
+        var sParameterName = sURLVariables[i].split('=');
+        if (sParameterName[0] == sParam) 
+        {
+            return sParameterName[1];
+        }
+    }
+}
+
+function getEmailFromGoogle(responseText) 
+{
+	var json = JSON.parse(responseText);
+	var loginData = {token:token, email:json.email, googleToken:true};
+    location.href = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(loginData));
+}
+
+function run()
+{
+    var token = getUrlParameter('access_token');
+	var email = xhrRequest('https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + token, 'GET', getEmailFromGoogle);
+
+}
+window.onload = run()
+
+</script>
+</head>
+<body>
+
+<h2>You logged in!</h2>
+<div id="myDiv"></div>
+
+</body>
+</html>
