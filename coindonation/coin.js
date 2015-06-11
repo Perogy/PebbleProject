@@ -37,7 +37,7 @@ var CoinWidgetComCounter = 0;
 
 if (typeof CoinWidgetCom != 'object')
 var CoinWidgetCom = {
-	source: 'https://52.10.200.175/coindonation/'
+	source: 'https://perogy.github.io/PebbleProject/coindonation/'
 	, config: []
 	, go :function(config) {
 		config = CoinWidgetCom.validate(config);
