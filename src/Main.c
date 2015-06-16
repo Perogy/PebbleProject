@@ -314,7 +314,7 @@ void timerTick(void* data)
             scrolledNumber++;
         layer_mark_dirty(menu_layer_get_layer(myMenuLayer));
     }
-    textScrollTimer = app_timer_register(TEXT_SCROLL_INTERVAL, timerTick, NULL);
+    textScrollTimer = app_timer_register(wd->config->scrollSpeed, timerTick, NULL);
 }
 
 void scrollTextBackToStart()
@@ -351,6 +351,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     char* projectIDsStr = 0;
     char* itemNamesStr = 0;
     char* itemIDsStr = 0;
+    char* strTimeline = 0;
     char* configStr = 0;
     WindowData* wd = (WindowData*)window_get_user_data(window);
     
@@ -375,6 +376,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
             case ITEM_IDS:
                 itemIDsStr = (char*)calloc(t->length, sizeof(char));
                 strcpy(itemIDsStr, t->value->cstring);
+            break;
+            case TIMELINE_JSON:
+                strTimeline = (char*)calloc(t->length, sizeof(char));
+                strcpy(strTimeline, t->value->cstring);
             break;
             case SELECTED_ITEM:
                 
@@ -405,8 +410,16 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
                 if (t->value->int32 == 1)
                 {
                     displayMessage("Login info was incorrect. Popping up the config window so you can try again.", 101);
-                    
                 }
+                if (t->value->int32 == 2)
+                {
+                    displayMessage("Error retrieving projects.", 100);
+                }
+                if (t->value->int32 == 3)
+                {
+                    displayMessage("Project Not Found.", 100);
+                }
+                return;
             break;
             case CONFIG:
                 configStr = (char*)calloc(t->length, sizeof(char));
@@ -431,7 +444,6 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     {
         ProjectStruct* projectList = createEmptyProjectList();
         unSerializeProjectsString(projectList, projectNamesStr, projectIDsStr);
-        WindowData* wd = window_get_user_data(window);
         setProjects(wd, projectList);
         menu_layer_reload_data(myMenuLayer);
         MenuIndex mi;
@@ -440,7 +452,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         menu_layer_set_selected_index(myMenuLayer, mi, MenuRowAlignCenter, true);
         
         //start scrolling the text of the menu item
-        textScrollTimer = app_timer_register(TEXT_SCROLL_INTERVAL, timerTick, NULL);
+        textScrollTimer = app_timer_register(wd->config->scrollSpeed, timerTick, NULL);
         free(projectNamesStr);
         free(projectIDsStr);
         
@@ -481,8 +493,31 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
         {
             window_stack_pop(1);
         }
-        textScrollTimer = app_timer_register(TEXT_SCROLL_INTERVAL, timerTick, NULL);
+        textScrollTimer = app_timer_register(wd->config->scrollSpeed, timerTick, NULL);
     }
+    
+    //probably dont actually need this
+    /*if (itemNamesStrTimeline)
+    {
+        ItemStruct* itemList = createEmptyItemList();
+        unSerializeItemsString(itemList, itemNamesStrTimeline, itemIDsStrTimeline);
+        wd->timelineItems = itemList;
+        
+        if (itemList->length == 0)
+        {
+            free(itemNamesStrTimeline);
+            free(itemIDsStrTimeline);
+            return;
+        }
+        
+        //pin to timeline
+        #ifdef PBL_COLOR
+            
+        #endif
+        
+        free(itemNamesStr);
+        free(itemIDsStr);
+    }*/
     
 }
 
@@ -548,7 +583,7 @@ void window_load(Window *window)
  
 void window_unload(Window *window)
 {
-    APP_LOG(APP_LOG_LEVEL_ERROR, "window unload called");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "window unload called");
     WindowData* wd = (WindowData*)window_get_user_data(window);
     menu_layer_destroy(myMenuLayer);
     if (wd != 0)
@@ -557,7 +592,6 @@ void window_unload(Window *window)
 
 void init()
 {
-    persist_delete(1);
     #ifdef PBL_COLOR
         backgroundColor = GColorLightGray;
         highlightColor = GColorRed;
@@ -585,7 +619,8 @@ void init()
 void deinit()
 {
     WindowData* wd = (WindowData*)window_get_user_data(window);
-    savePersistentConfig(wd->config);
+    if (wd->config)
+        savePersistentConfig(wd->config);
     window_destroy(window);
 }
 

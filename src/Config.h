@@ -6,6 +6,7 @@
     
 typedef struct conf
 {
+    //scrollspeed in milliseconds
     int scrollSpeed;
     GColor backgroundColor;
     GColor foregroundColor;

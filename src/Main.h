@@ -14,6 +14,7 @@
 //an error happened in javascript
 #define ERROR 7
 #define CONFIG 8
+#define TIMELINE_JSON 9
     
 #define TEXT_SCROLL_INTERVAL 150
 

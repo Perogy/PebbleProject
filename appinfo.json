@@ -8,6 +8,7 @@
         "PROJECT_NAMES": 0,
         "SELECTED_ITEM": 5,
         "SELECTED_PROJECT": 2,
+        "TIMELINE_JSON": 9,
         "WAITING": 6
     },
     "capabilities": [
@@ -15,13 +16,20 @@
         "configurable"
     ],
     "companyName": "bradpaugh@gmail.com",
-    "longName": "Todoist Time",
+    "longName": "Todoist Mini",
     "projectType": "native",
     "resources": {
-        "media": []
+        "media": [
+            {
+                "file": "images/TodoistMiniLogo.png",
+                "menuIcon": true,
+                "name": "TODOIST_MINI_LOGO",
+                "type": "png"
+            }
+        ]
     },
     "sdkVersion": "3",
-    "shortName": "Todoist Time",
+    "shortName": "Todoist Mini",
     "targetPlatforms": [
         "aplite",
         "basalt"

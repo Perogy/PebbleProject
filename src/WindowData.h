@@ -10,6 +10,7 @@ typedef struct mainWindowData
 {
     ProjectStruct* projects;
     ItemStruct* items;
+    ItemStruct* timelineItems;
     Config* config;
     int currentPage;
 } WindowData;

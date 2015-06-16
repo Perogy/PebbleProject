@@ -10,11 +10,28 @@ var xhrRequest = function (url, type, callback) {
 
 function getItems(responseText)
 {
-    console.log("IN Items");
     // responseText contains a JSON object with item info
     var json = JSON.parse(responseText);
-
-    console.log("\nitemresponse:" + responseText + "\n");
+    console.log("\nGET ITEMS RESPONSE:" + responseText);
+    
+    //check if query was a "Today" query and go into the "data" section if it is
+    if (json[0])
+    {
+        if (json[0].hasOwnProperty("query"))
+        {
+            json = json[0].data;
+        }
+    }
+    
+    if (json[0])
+    {
+        if (!json[0].hasOwnProperty("id"))
+        {
+            sendErrorMessage(3);
+            return;
+        }
+    }
+    
     // Conditions
     var itemNames = "";
     var itemIDs = "";
@@ -23,8 +40,6 @@ function getItems(responseText)
         itemNames = itemNames + json[i].content + " |";
         itemIDs = itemIDs  + json[i].id + "|";
     }
-    console.log("\nitemNames:\n" + itemNames);
-    console.log("\nitemIDs:\n" + itemIDs);
 
     var dictionary = 
     {
@@ -36,11 +51,42 @@ function getItems(responseText)
     Pebble.sendAppMessage(dictionary,
                           function(e) 
                           {
-                              console.log("info sent to Pebble successfully!");
+                              
                           },
                           function(e) 
                           {
-                              console.log("Error sending info to Pebble!");
+                              console.log("Data did not transfer to pebble successfully");
+                          });   
+}
+
+function getAllItemsForTimeline(responseText)
+{
+    // responseText contains a JSON object with item info
+    var json = JSON.parse(responseText);
+    
+    // Conditions
+    var itemNames = "";
+    var itemIDs = "";
+    for(var i=0;i<json.length;i++)
+    {
+        itemNames = itemNames + json[i].content + " |";
+        itemIDs = itemIDs  + json[i].id + "|";
+    }
+
+    var dictionary = 
+    {
+        "TIMELINE_JSON": json
+    };
+
+    // Send to Pebble
+    Pebble.sendAppMessage(dictionary,
+                          function(e) 
+                          {
+                              
+                          },
+                          function(e) 
+                          {
+                              console.log("Data did not transfer to pebble successfully");
                           });   
 }
 
@@ -50,34 +96,42 @@ function getToken(responseText)
     var json = JSON.parse(responseText);
     if (responseText == "\"LOGIN_ERROR\"")
     {
-        console.log("\ngot login error");
         sendErrorMessage(1);
         openConfig();
         return;
     }
     // Conditions
     var token = json.token;
-    console.log("\ndat token:" + token + "\n");
     localStorage.setItem("token", token);
     getProjectsFromToken();
 }
 
 function getProjects(responseText)
 {
-    console.log("IN PROJECTS");
     // responseText contains a JSON object with project data
     var json = JSON.parse(responseText);
 
+    if (json[0])
+    {
+        if (!json[0].hasOwnProperty("id"))
+        {
+            sendErrorMessage(2);
+            return;
+        }
+    }
     // Conditions
     var projectNames = "";
     var projectIDs = "";
+    
+    //put today project in (custom)
+    projectNames = "Today |";
+    projectIDs = "0|";
+    
     for(var i=0;i<json.length;i++)
     {
         projectNames = projectNames + json[i].name + " |";
         projectIDs = projectIDs  + json[i].id + "|";
     }
-    console.log("\nProjectNames:\n" + projectNames);
-    console.log("\nProjectIDs:\n" + projectIDs);
 
     var dictionary = 
     {
@@ -89,17 +143,16 @@ function getProjects(responseText)
     Pebble.sendAppMessage(dictionary,
                           function(e) 
                           {
-                              console.log("info sent to Pebble successfully!");
+                              
                           },
                           function(e) 
                           {
-                              console.log("Error sending info to Pebble!");
+                              console.log("Data did not transfer to pebble successfully");
                           });   
 }
 
 function markItem(responseText)
 {
-    console.log("IN MARK:" + responseText);
     if (responseText == "\"ok\"")
     {
         var dictionary = 
@@ -109,11 +162,11 @@ function markItem(responseText)
         Pebble.sendAppMessage(dictionary,
                           function(e) 
                           {
-                              console.log("info sent to Pebble successfully!");
+                              
                           },
                           function(e) 
                           {
-                              console.log("Error sending info to Pebble!");
+                              console.log("Data did not transfer to pebble successfully");
                           });   
     }
     else
@@ -125,11 +178,11 @@ function markItem(responseText)
         Pebble.sendAppMessage(dictionary,
                           function(e) 
                           {
-                              console.log("info sent to Pebble successfully!");
+                              
                           },
                           function(e) 
                           {
-                              console.log("Error sending info to Pebble!");
+                              console.log("Data did not transfer to pebble successfully");
                           });   
     }
     
@@ -146,11 +199,11 @@ function sendWaitingMessage(code)
         Pebble.sendAppMessage(dictionary,
                           function(e) 
                           {
-                              console.log("info sent to Pebble successfully!");
+                              
                           },
                           function(e) 
                           {
-                              console.log("Error sending info to Pebble!");
+                              console.log("Data did not transfer to pebble successfully");
                           });   
 }
 
@@ -164,11 +217,11 @@ function sendErrorMessage(code)
         Pebble.sendAppMessage(dictionary,
                           function(e) 
                           {
-                              console.log("info sent to Pebble successfully!");
+                              
                           },
                           function(e) 
                           {
-                              console.log("Error sending info to Pebble!");
+                              console.log("Data did not transfer to pebble successfully");
                           });   
 }
 
@@ -183,9 +236,8 @@ function processTodoistData(email, password)
 
 function processTodoistDataWithGoogle()
 {
-    console.log("\nGETGOOGLETOKEN:" + localStorage.getItem("googleToken") + "\n");
     var url = "https://todoist.com/API/loginWithGoogle?email=" +
-    "bradpaugh@gmail.com" + "&oauth2_token=" + localStorage.getItem("googleToken");
+    localStorage.getItem("email") + "&oauth2_token=" + localStorage.getItem("googleToken");
     //note that xhr request is ASYNCHRONOUS everything after it in this function will get executed
     //before it is even finished the next path of execution HAS to be in the callback function
     xhrRequest(url, 'GET', getToken);
@@ -205,6 +257,18 @@ function getItemsForSelectedProject(projectID)
     xhrRequest(url, 'GET', getItems);
 }
 
+function getItemsForToday()
+{
+    var url = "https://api.todoist.com/API/query?queries=[\"Today\"]&token=" + localStorage.getItem("token");
+    xhrRequest(url, 'GET', getItems);
+}
+
+function getTimelineItemsFor7Days()
+{
+    var url = "https://api.todoist.com/API/query?queries=[\"7 days\"]&token=" + localStorage.getItem("token");
+    xhrRequest(url, 'GET', getAllItemsForTimeline);
+}
+
 function markItemAsCompleted(itemID)
 {
     var url = "https://todoist.com/API/completeItems?ids=[" +
@@ -215,40 +279,35 @@ function markItemAsCompleted(itemID)
 
 // Listen for when the watchface is opened
 Pebble.addEventListener('ready', 
-  function(e) {
-    console.log("PebbleKit JS ready!");
-    //temporary to test what happens when there is no token
-    //localStorage.removeItem("token");
-    if (localStorage.getItem("token") === null)
+    function(e) 
     {
-        sendWaitingMessage(1);
-        console.log("Opening Config: token = " + localStorage.getItem("token"));
-        openConfig();
+        //temporary to test what happens when there is no token
+        //localStorage.removeItem("token");
+        if (localStorage.getItem("token") === null)
+        {
+            sendWaitingMessage(1);
+            openConfig();
+        }
+        else
+        {
+            sendWaitingMessage(2);
+            getProjectsFromToken();
+        }
     }
-    else
-    {
-        sendWaitingMessage(2);
-        getProjectsFromToken(); 
-    }
-    //check if there is login information
-    //check if token has expired
-    //if token expired bring to authorization screen on phone and state on watch app "waiting for authorization" or something similar
-    //if not expired pull in data
-  }
 );
 
 // Listen for when an AppMessage is received
 Pebble.addEventListener('appmessage',
   function(e) {
-    console.log("AppMessage received! " + e.payload.SELECTED_PROJECT + e.payload.SELECTED_ITEM);
     if(e.payload.SELECTED_PROJECT)
     {
-        console.log("PAYLOAD SELECTED PROJECT");
-        getItemsForSelectedProject(e.payload.SELECTED_PROJECT);
+        if (e.payload.SELECTED_PROJECT == "0")
+            getItemsForToday();
+        else
+            getItemsForSelectedProject(e.payload.SELECTED_PROJECT);
     }
     if(e.payload.SELECTED_ITEM)
     {
-        console.log("PAYLOAD SELECTED ITEM");
         markItemAsCompleted(e.payload.SELECTED_ITEM);
     }
   }                     
@@ -257,12 +316,10 @@ Pebble.addEventListener('appmessage',
 //sets the configuration options from the config page that the user has just saved.
 function setConfig(loginData)
 {
-    console.log("IN Config");
     localStorage.setItem("ConfigData", JSON.stringify(loginData));
     var configString = loginData.scrollSpeed + '|' + loginData.backgroundColor + '|' + loginData.foregroundColor + '|' + loginData.altBackgroundColor + '|' + loginData.altForegroundColor + '|' + loginData.highlightBackgroundColor + '|' + loginData.highlightForegroundColor + '|';
     
 
-    console.log("configstring: " + configString + "\n");
     var dictionary = 
     {
         "CONFIG": configString
@@ -272,33 +329,31 @@ function setConfig(loginData)
     Pebble.sendAppMessage(dictionary,
                           function(e) 
                           {
-                              console.log("info sent to Pebble successfully!");
+                              
                           },
                           function(e) 
                           {
-                              console.log("Error sending info to Pebble!");
+                              console.log("Data did not transfer to pebble successfully");
                           });   
 }
 
-function openConfig(e) {
-    //if (localStorage.getItem("ConfigData") === null)
-    //{
-        Pebble.openURL('http://52.10.200.175/index.html');
-    //}
-    //else
-    //{
-        //var configData = JSON.parse(localStorage.getItem("ConfigData"));
-        //console.log('\nconfig member:' + configData.backgroundColor);
-        //console.log('\nhttp://52.10.200.175/index.html#' + JSON.stringify(configData));
-        //Pebble.openURL('http://52.10.200.175/index.html#' + 'scrollSpeed=' + configData.scrollSpeed + '&backgroundColor=' + configData.backgroundColor + '&foregroundColor=' + configData.foregroundColor + '&altBackgroundColor=' + 
-        //                                                    configData.altBackgroundColor + '&altForegroundColor=' + configData.altForegroundColor + '&hightlightBackgroundColor=' + configData.highlightBackgroundColor + '&highlightForegroundColor=' + configData.highlightForegroundColor);  
-    //}
+function openConfig(e) 
+{
+    if (localStorage.getItem("ConfigData") === null)
+    {
+        Pebble.openURL('https://perogy.github.io/PebbleProject/index.html');
+    }
+    else
+    {
+        var configData = JSON.parse(localStorage.getItem("ConfigData"));
+        Pebble.openURL('https://perogy.github.io/PebbleProject/index.html#' + 'scrollSpeed=' + configData.scrollSpeed + '&backgroundColor=' + configData.backgroundColor + '&foregroundColor=' + configData.foregroundColor + '&altBackgroundColor=' + 
+                                                            configData.altBackgroundColor + '&altForegroundColor=' + configData.altForegroundColor + '&highlightBackgroundColor=' + configData.highlightBackgroundColor + '&highlightForegroundColor=' + configData.highlightForegroundColor);  
+    }
 }
 
 function closeConfig(e) {
     
     var loginData = JSON.parse(decodeURIComponent(e.response));
-    console.log('Configuration window returned: ', JSON.stringify(loginData));
     
     if (loginData.type == "configData")
     {
@@ -310,6 +365,7 @@ function closeConfig(e) {
     {
         //check whether google or normal login and then run appropriate code
         localStorage.setItem("googleToken", loginData.token);
+        localStorage.setItem("email", loginData.email);
         sendWaitingMessage(2);
         processTodoistDataWithGoogle();
     }

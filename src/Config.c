@@ -30,8 +30,10 @@ void setConfig(char* configString, Config* config)
     
     outputArrayContents(configArray, *len);
         
-    config->scrollSpeed = atoi(configArray[0]);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "\nscrollspeed set success");
+    //converts the number from 1-10 to its millisecond value, 10 is fastest 1 is slowest,
+    //therefore 10 is 50 milliseconds, 1 is 500 milliseconds
+    config->scrollSpeed = (1.0/atoi(configArray[0]))*500;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "\nscrollspeed set success, it is: %d", config->scrollSpeed);
 
     #ifdef PBL_COLOR
         APP_LOG(APP_LOG_LEVEL_DEBUG, "\nbackground color string is: %s", configArray[1]);
@@ -59,7 +61,6 @@ void savePersistentConfig(Config* config)
 
 void loadPersistentConfig(Config* config)
 {
-    persist_delete(CONFIG_KEY);
     if (persist_exists(CONFIG_KEY))
     {
         persist_read_data(CONFIG_KEY, config, sizeof(*config));

@@ -39,7 +39,8 @@ void up_click_handler(ClickRecognizerRef recognizer, void *context)
         scrollTextBackToStart();
         currentIndex.row--;
         menu_layer_set_selected_index(myMenuLayer, currentIndex, MenuRowAlignCenter, true);
-        textScrollTimer = app_timer_register(TEXT_SCROLL_INTERVAL, timerTick, NULL);
+        WindowData* wd = window_get_user_data(window);
+        textScrollTimer = app_timer_register(wd->config->scrollSpeed, timerTick, NULL);
     }
 }
 
@@ -54,7 +55,8 @@ void down_click_handler(ClickRecognizerRef recognizer, void *context)
         scrollTextBackToStart();
         currentIndex.row++;
         menu_layer_set_selected_index(myMenuLayer, currentIndex, MenuRowAlignCenter, true);
-        textScrollTimer = app_timer_register(TEXT_SCROLL_INTERVAL, timerTick, NULL);
+        WindowData* wd = window_get_user_data(window);
+        textScrollTimer = app_timer_register(wd->config->scrollSpeed, timerTick, NULL);
     }
 }
 
@@ -64,6 +66,7 @@ void back_click_handler(ClickRecognizerRef recognizer, void *context)
     if (pageDepth != 1)
     {
         app_timer_cancel(textScrollTimer);
+        scrollable = 0;
         destroyItemList(wd->items);
         pageDepth--;
         menu_layer_reload_data(myMenuLayer);
@@ -72,7 +75,7 @@ void back_click_handler(ClickRecognizerRef recognizer, void *context)
         mi.section = 0;
         menu_layer_set_selected_index(myMenuLayer, mi, MenuRowAlignCenter, true);
         scrolledNumber = 0;
-        textScrollTimer = app_timer_register(TEXT_SCROLL_INTERVAL, timerTick, NULL);
+        textScrollTimer = app_timer_register(wd->config->scrollSpeed, timerTick, NULL);
     }
     else
     {

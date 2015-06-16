@@ -1,6 +1,7 @@
 #include <pebble.h>
 #include "ErrorWindow.h"
 #include "ErrorWindowClicks.h"
+#include "Main.h"
 
 void displayMessage(char* errorMessage, int type)
 {   
@@ -18,24 +19,21 @@ void displayMessage(char* errorMessage, int type)
     window_set_user_data(errorWindow, em);
 
     window_stack_push(errorWindow, true);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "End display message");
 }    
 
 void loadingScreenTimer(void* data)
 {
-    displayMessage("Loading timed out", 100);
+    while (window_stack_get_top_window() != window)
+    {
+        window_stack_pop(1);
+    }
+    displayMessage("Loading timed out. You may have lost connection, or have a poor connection to the internet.", 100);
 }
 
 void errorWindow_unload(Window* window)
 {
     ErrorMessage* em = window_get_user_data(window);
     destroyErrorMessage(em);
-    
-    if (em->type == FATAL)
-    {
-        window_stack_pop_all(1);
-    }
-
 }
 void error_config_provider(Window *window) 
 {
@@ -57,15 +55,19 @@ void errorWindow_load(Window* window)
     em->errorScrollLayer = scroll_layer_create(bounds);
 
     //if the window is not a "loading" window
-    if (em->type != LOADING)
-    {
+    //if (em->type != LOADING)
+   // {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "\nclick config provider set");
         window_set_click_config_provider(window, (ClickConfigProvider) error_config_provider);
-    }
-    else
-    {
+    //}
+   // else
+    //{
         //set a timeout on the loading window (may want to do this in javascript instead)
+        //em->loadingTimeoutTimer = app_timer_register(LOADING_TIMEOUT_INTERVAL, loadingScreenTimer, NULL);
+    //}
+    
+    if (em->type == LOADING)
         em->loadingTimeoutTimer = app_timer_register(LOADING_TIMEOUT_INTERVAL, loadingScreenTimer, NULL);
-    }
 
     em->errorTextLayer = text_layer_create(max_text_bounds);
     text_layer_set_text(em->errorTextLayer, em->message);
