@@ -89,16 +89,7 @@
 
 	function loginTodoist() {
 		var loginData = {email:document.getElementById('todoistEmail').value, password:document.getElementById('todoistPassword').value, googleToken:false};
-		location.href = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(loginData));
-		//var url = "https://todoist.com/API/login?email=" + document.getElementById('todoistEmail').value + "&password=" + document.getElementById('todoistPassword').value;
-		//xhrRequest(url, 'GET', afterLoginTodoist);
-	}
-
-	function afterLoginTodoist() {
-		var json = JSON.parse(responseText);
-
-    	// Conditions
-    	var loginData = {token:json.token, googleToken:false};
+		alert(getUrlParameter('return_to'))
 		location.href = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(loginData));
 	}
 	
