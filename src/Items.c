@@ -44,6 +44,4 @@ void unSerializeItemsString(ItemStruct* itemList, char* itemNamesString, char* i
     {
         itemList->checked[i] = 0;    
     }
-    outputArrayContents(itemList->items, itemList->length);
-    outputArrayContents(itemList->itemIDs, itemList->length);
 }

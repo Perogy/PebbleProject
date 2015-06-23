@@ -57,7 +57,6 @@ void errorWindow_load(Window* window)
     //if the window is not a "loading" window
     //if (em->type != LOADING)
    // {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "\nclick config provider set");
         window_set_click_config_provider(window, (ClickConfigProvider) error_config_provider);
     //}
    // else

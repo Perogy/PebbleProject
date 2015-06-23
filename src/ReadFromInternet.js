@@ -12,7 +12,6 @@ function getItems(responseText)
 {
     // responseText contains a JSON object with item info
     var json = JSON.parse(responseText);
-    console.log("\nGET ITEMS RESPONSE:" + responseText);
     
     //check if query was a "Today" query and go into the "data" section if it is
     if (json[0])
@@ -37,7 +36,7 @@ function getItems(responseText)
     var itemIDs = "";
     for(var i=0;i<json.length;i++)
     {
-        itemNames = itemNames + json[i].content + " |";
+        itemNames = itemNames + json[i].content.replace("|", "") + " |";
         itemIDs = itemIDs  + json[i].id + "|";
     }
 
@@ -102,7 +101,7 @@ function getToken(responseText)
     }
     // Conditions
     var token = json.token;
-    localStorage.setItem("token", token);
+    localStorage.setItem("todoistMiniToken", token);
     getProjectsFromToken();
 }
 
@@ -129,7 +128,7 @@ function getProjects(responseText)
     
     for(var i=0;i<json.length;i++)
     {
-        projectNames = projectNames + json[i].name + " |";
+        projectNames = projectNames + json[i].name.replace("|", "")  + " |";
         projectIDs = projectIDs  + json[i].id + "|";
     }
 
@@ -190,16 +189,38 @@ function markItem(responseText)
 
 //code 1 = waiting for config
 //code 2 = waiting to load data
-function sendWaitingMessage(code)
+function sendWaitingMessageAndPerformAction(code)
 {
+    //when we send app message it just needs to be a 1 or 2 (config or loading)
+    var sendCode;
+    
+    if (code > 2)
+        sendCode = 2;
+    else
+        sendCode = code;
     var dictionary = 
         {
-            "WAITING": code
+            "WAITING": sendCode
         };
         Pebble.sendAppMessage(dictionary,
                           function(e) 
                           {
-                              
+                              if (code == 1)
+                              {
+                                   openConfig();   
+                              }
+                              if (code == 2)
+                              {
+                                   getProjectsFromToken(); 
+                              }
+                              if (code == 3)
+                              {
+                                   processTodoistDataWithGoogle();
+                              }
+                              if (code == 4)
+                              {
+                                   processTodoistData();  
+                              }
                           },
                           function(e) 
                           {
@@ -225,10 +246,12 @@ function sendErrorMessage(code)
                           });   
 }
 
-function processTodoistData(email, password) 
+function processTodoistData() 
 {
     var url = "https://todoist.com/API/login?email=" +
-    email + "&password=" + password;
+    localStorage.getItem("todoistEmail") + "&password=" + localStorage.getItem("todoistPassword");
+    localStorage.removeItem("todoistEmail");
+    localStorage.removeItem("todoistPassword");
     //note that xhr request is ASYNCHRONOUS everything after it in this function will get executed
     //before it is even finished the next path of execution HAS to be in the callback function
     xhrRequest(url, 'GET', getToken);
@@ -237,7 +260,7 @@ function processTodoistData(email, password)
 function processTodoistDataWithGoogle()
 {
     var url = "https://todoist.com/API/loginWithGoogle?email=" +
-    localStorage.getItem("email") + "&oauth2_token=" + localStorage.getItem("googleToken");
+    localStorage.getItem("googleEmail") + "&oauth2_token=" + localStorage.getItem("googleToken");
     //note that xhr request is ASYNCHRONOUS everything after it in this function will get executed
     //before it is even finished the next path of execution HAS to be in the callback function
     xhrRequest(url, 'GET', getToken);
@@ -245,34 +268,33 @@ function processTodoistDataWithGoogle()
 
 function getProjectsFromToken()
 {
-    var url = "https://todoist.com/API/getProjects?token=" + localStorage.getItem("token");
+    var url = "https://todoist.com/API/getProjects?token=" + localStorage.getItem("todoistMiniToken");
     xhrRequest(url, 'GET', getProjects);
 }
 
 function getItemsForSelectedProject(projectID)
 {
     var url = "https://todoist.com/API/getUncompletedItems?project_id=" +
-    projectID + "&token=" + localStorage.getItem("token");
-    console.log("\nprojID:" + url + "\n");
+    projectID + "&token=" + localStorage.getItem("todoistMiniToken");
     xhrRequest(url, 'GET', getItems);
 }
 
 function getItemsForToday()
 {
-    var url = "https://api.todoist.com/API/query?queries=[\"Today\"]&token=" + localStorage.getItem("token");
+    var url = "https://api.todoist.com/API/query?queries=[\"Today\"]&token=" + localStorage.getItem("todoistMiniToken");
     xhrRequest(url, 'GET', getItems);
 }
 
 function getTimelineItemsFor7Days()
 {
-    var url = "https://api.todoist.com/API/query?queries=[\"7 days\"]&token=" + localStorage.getItem("token");
+    var url = "https://api.todoist.com/API/query?queries=[\"7 days\"]&token=" + localStorage.getItem("todoistMiniToken");
     xhrRequest(url, 'GET', getAllItemsForTimeline);
 }
 
 function markItemAsCompleted(itemID)
 {
     var url = "https://todoist.com/API/completeItems?ids=[" +
-    itemID + "]&token=" + localStorage.getItem("token");
+    itemID + "]&token=" + localStorage.getItem("todoistMiniToken");
     xhrRequest(url, 'GET', markItem);
 }
 
@@ -282,16 +304,14 @@ Pebble.addEventListener('ready',
     function(e) 
     {
         //temporary to test what happens when there is no token
-        //localStorage.removeItem("token");
-        if (localStorage.getItem("token") === null)
+        localStorage.removeItem("token");
+        if (localStorage.getItem("todoistMiniToken") === null)
         {
-            sendWaitingMessage(1);
-            openConfig();
+            sendWaitingMessageAndPerformAction(1);
         }
         else
         {
-            sendWaitingMessage(2);
-            getProjectsFromToken();
+            sendWaitingMessageAndPerformAction(2);
         }
     }
 );
@@ -365,14 +385,15 @@ function closeConfig(e) {
     {
         //check whether google or normal login and then run appropriate code
         localStorage.setItem("googleToken", loginData.token);
-        localStorage.setItem("email", loginData.email);
-        sendWaitingMessage(2);
-        processTodoistDataWithGoogle();
+        localStorage.setItem("googleEmail", loginData.email);
+        sendWaitingMessageAndPerformAction(3);
+        
     }
     else
     {
-        sendWaitingMessage(2);
-        processTodoistData(loginData.email, loginData.password);
+        localStorage.setItem("todoistEmail", loginData.email);
+        localStorage.setItem("todoistPassword", loginData.password);
+        sendWaitingMessageAndPerformAction(4);
     }
 
 }

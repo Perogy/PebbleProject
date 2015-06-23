@@ -24,6 +24,27 @@ AppTimer* textScrollTimer;
 //page depth 1 = projects, page depth 2 = items for the selected project
 int pageDepth;
     
+
+char *translate_error(AppMessageResult result) {
+  switch (result) {
+    case APP_MSG_OK: return "APP_MSG_OK";
+    case APP_MSG_SEND_TIMEOUT: return "APP_MSG_SEND_TIMEOUT";
+    case APP_MSG_SEND_REJECTED: return "APP_MSG_SEND_REJECTED";
+    case APP_MSG_NOT_CONNECTED: return "APP_MSG_NOT_CONNECTED";
+    case APP_MSG_APP_NOT_RUNNING: return "APP_MSG_APP_NOT_RUNNING";
+    case APP_MSG_INVALID_ARGS: return "APP_MSG_INVALID_ARGS";
+    case APP_MSG_BUSY: return "APP_MSG_BUSY";
+    case APP_MSG_BUFFER_OVERFLOW: return "APP_MSG_BUFFER_OVERFLOW";
+    case APP_MSG_ALREADY_RELEASED: return "APP_MSG_ALREADY_RELEASED";
+    case APP_MSG_CALLBACK_ALREADY_REGISTERED: return "APP_MSG_CALLBACK_ALREADY_REGISTERED";
+    case APP_MSG_CALLBACK_NOT_REGISTERED: return "APP_MSG_CALLBACK_NOT_REGISTERED";
+    case APP_MSG_OUT_OF_MEMORY: return "APP_MSG_OUT_OF_MEMORY";
+    case APP_MSG_CLOSED: return "APP_MSG_CLOSED";
+    case APP_MSG_INTERNAL_ERROR: return "APP_MSG_INTERNAL_ERROR";
+    default: return "UNKNOWN ERROR";
+  }
+}
+
 //sends the project ID at specified index to the phone to get itemlist
 void sendProjectIDToPhone(int index)
 {
@@ -63,13 +84,33 @@ void sendItemIDToPhone(int index)
 //draws a checkbox in the given cell layer of the menu
 void drawCheckbox(GContext *ctx, Layer *cell_layer, int index)
 {
-    graphics_context_set_fill_color(ctx, GColorWhite);
+    WindowData* wd = (WindowData*)window_get_user_data(window);
     GRect cellBounds = layer_get_bounds(cell_layer);
     GPoint g = GPoint(cellBounds.size.w*.80 + CIRCLE_RADIUS, cellBounds.size.h/2.0);
     #ifdef PBL_COLOR
         graphics_context_set_antialiased(ctx, true);
     #endif
     graphics_draw_circle(ctx, g, CIRCLE_RADIUS);
+    
+    if (wd->items->checked[index] == 1)
+    {
+        GPoint g = GPoint(cellBounds.size.w*.80 + CIRCLE_RADIUS, cellBounds.size.h/2.0);
+        //needed for aplite
+        graphics_context_set_fill_color(ctx, wd->config->foregroundColor);
+        #ifdef PBL_COLOR
+            MenuIndex currentIndex = menu_layer_get_selected_index(myMenuLayer);
+            int currentRow = currentIndex.row;
+            if (index == currentRow)
+            {
+                graphics_context_set_fill_color(ctx, wd->config->highlightForegroundColor);
+            }
+            else
+            {
+                graphics_context_set_fill_color(ctx, wd->config->foregroundColor);
+            }
+        #endif
+        graphics_fill_circle(ctx, g, CIRCLE_RADIUS/2.0);
+    }
 }
 
 //draws a dot inside the checkbox to mark as "checked"
@@ -78,7 +119,6 @@ void checkCheckbox(GContext *ctx, Layer *cell_layer, int index)
     WindowData* wd = (WindowData*)window_get_user_data(window);
     if (wd->items->checked[index] == 1)
     {   
-        graphics_context_set_fill_color(ctx, GColorBlack);
         GRect cellBounds = layer_get_bounds(cell_layer);
         GPoint g = GPoint(cellBounds.size.w*.80 + CIRCLE_RADIUS, cellBounds.size.h/2.0);
         graphics_fill_circle(ctx, g, CIRCLE_RADIUS/2.0);
@@ -90,17 +130,20 @@ void draw_header_callback(GContext *ctx, Layer *cell_layer, uint16_t section_ind
     //menu_cell_basic_header_draw(ctx, cell_layer, "Projects");
     if (pageDepth == 1)
     {
+        WindowData* wd = (WindowData*)window_get_user_data(window);
         GRect cellBounds = layer_get_bounds(cell_layer);
+        graphics_context_set_text_color(ctx, wd->config->foregroundColor);
         graphics_draw_text(ctx, "Projects", fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
-        graphics_context_set_stroke_color(ctx, GColorBlack);
+        graphics_context_set_stroke_color(ctx, wd->config->foregroundColor);
         graphics_draw_line(ctx,GPoint(cellBounds.origin.x,cellBounds.origin.y+cellBounds.size.h-1), GPoint(cellBounds.origin.x+cellBounds.size.w, cellBounds.origin.y+cellBounds.size.h-1));
     }
     else
     {
         WindowData* wd = (WindowData*)window_get_user_data(window);
         GRect cellBounds = layer_get_bounds(cell_layer);
+        graphics_context_set_text_color(ctx, wd->config->foregroundColor);
         graphics_draw_text(ctx, wd->projects->projects[selectedProjectIndex], fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
-        graphics_context_set_stroke_color(ctx, GColorBlack);
+        graphics_context_set_stroke_color(ctx, wd->config->foregroundColor);
         graphics_draw_line(ctx,GPoint(cellBounds.origin.x,cellBounds.origin.y+cellBounds.size.h-1), GPoint(cellBounds.origin.x+cellBounds.size.w, cellBounds.origin.y+cellBounds.size.h-1));
     }
     
@@ -130,33 +173,38 @@ void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, 
                 if (cell_index->row == i)
                 {
                     GRect cellBounds = layer_get_bounds(cell_layer);
-                    graphics_context_set_text_color(ctx, GColorBlack);
                     
                     MenuIndex currentIndex = menu_layer_get_selected_index(myMenuLayer);
                     int currentRow = currentIndex.row;
                     
-                    #ifdef PBL_COLOR
-                        if (cell_index->row == currentRow)
-                        {
+                    if (cell_index->row == currentRow)
+                    {
+                        //have to reverse background/foreground color on aplite as it seems to auto invert
+                        //and basalt does not (you set the colors in "normal colors" function).
+                        #ifdef PBL_COLOR
                             graphics_context_set_text_color(ctx, wd->config->highlightForegroundColor);
                             graphics_context_set_fill_color(ctx, wd->config->highlightBackgroundColor);
-                        }
+                            graphics_context_set_stroke_color(ctx, wd->config->highlightForegroundColor);
+                        #else
+                            graphics_context_set_text_color(ctx, wd->config->highlightBackgroundColor);
+                            graphics_context_set_fill_color(ctx, wd->config->highlightForegroundColor);
+                        #endif
+                    }
+                    else
+                    {
+                        if(i%2 == 0)
+                        {
+                            graphics_context_set_text_color(ctx, wd->config->foregroundColor);
+                            graphics_context_set_fill_color(ctx, wd->config->backgroundColor);
+                            graphics_context_set_stroke_color(ctx, wd->config->foregroundColor);
+                        }  
                         else
                         {
-                            if(i%2 == 0)
-                            {
-                                graphics_context_set_text_color(ctx, wd->config->foregroundColor);
-                                graphics_context_set_fill_color(ctx, wd->config->backgroundColor);
-                            }  
-                            else
-                            {
-                                graphics_context_set_text_color(ctx, wd->config->altForegroundColor);
-                                graphics_context_set_fill_color(ctx, wd->config->altBackgroundColor);
-                            }
+                            graphics_context_set_text_color(ctx, wd->config->altForegroundColor);
+                            graphics_context_set_fill_color(ctx, wd->config->altBackgroundColor);
+                            graphics_context_set_stroke_color(ctx, wd->config->altForegroundColor);
                         }
-                    #else
-                        graphics_context_set_fill_color(ctx, GColorWhite);
-                    #endif
+                    }
                     graphics_fill_rect(ctx, cellBounds, 0, GCornerNone);
                     
                     
@@ -197,33 +245,38 @@ void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, 
                     GRect textBounds = GRect(cellBounds.origin.x, cellBounds.origin.y, cellBounds.size.w*.80, cellBounds.size.h);
                     //GRect newBounds = GRect(cellBounds.origin.x, cellBounds.origin.y, cellBounds.size.w*.80, cellBounds.size.h);
                     //layer_set_bounds(cell_layer, newBounds);
-                    graphics_context_set_text_color(ctx, GColorBlack);
                     
                     MenuIndex currentIndex = menu_layer_get_selected_index(myMenuLayer);
                     int currentRow = currentIndex.row;
                     
-                    #ifdef PBL_COLOR
-                        if (cell_index->row == currentRow)
-                        {
+                    if (cell_index->row == currentRow)
+                    {
+                        //have to reverse background/foreground color on aplite as it seems to auto invert
+                        //and basalt does not (you set the colors in "normal colors" function).
+                        #ifdef PBL_COLOR
                             graphics_context_set_text_color(ctx, wd->config->highlightForegroundColor);
                             graphics_context_set_fill_color(ctx, wd->config->highlightBackgroundColor);
-                        }
+                            graphics_context_set_stroke_color(ctx, wd->config->highlightForegroundColor);
+                        #else
+                            graphics_context_set_text_color(ctx, wd->config->highlightBackgroundColor);
+                            graphics_context_set_fill_color(ctx, wd->config->highlightForegroundColor);
+                        #endif
+                    }
+                    else
+                    {
+                        if(i%2 == 0)
+                        {
+                            graphics_context_set_text_color(ctx, wd->config->foregroundColor);
+                            graphics_context_set_fill_color(ctx, wd->config->backgroundColor);
+                            graphics_context_set_stroke_color(ctx, wd->config->foregroundColor);
+                        }  
                         else
                         {
-                            if(i%2 == 0)
-                            {
-                                graphics_context_set_text_color(ctx, wd->config->foregroundColor);
-                                graphics_context_set_fill_color(ctx, wd->config->backgroundColor);
-                            }  
-                            else
-                            {
-                                graphics_context_set_text_color(ctx, wd->config->altForegroundColor);
-                                graphics_context_set_fill_color(ctx, wd->config->altBackgroundColor);
-                            }
+                            graphics_context_set_text_color(ctx, wd->config->altForegroundColor);
+                            graphics_context_set_fill_color(ctx, wd->config->altBackgroundColor);
+                            graphics_context_set_stroke_color(ctx, wd->config->altForegroundColor);
                         }
-                    #else
-                        graphics_context_set_fill_color(ctx, GColorWhite);
-                    #endif
+                    }
                     graphics_fill_rect(ctx, cellBounds, 0, GCornerNone);
 
                     //if selected
@@ -243,7 +296,7 @@ void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, 
                     }
                     graphics_draw_text(ctx, wd->items->items[i], fonts_get_system_font(FONT_KEY_GOTHIC_24), textBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
                     drawCheckbox(ctx, cell_layer, i);
-                    checkCheckbox(ctx, cell_layer, i);
+                    //checkCheckbox(ctx, cell_layer, i);
                 }
             }
         }
@@ -467,10 +520,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     {
         ItemStruct* itemList = createEmptyItemList();
         unSerializeItemsString(itemList, itemNamesStr, itemIDsStr);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "\nfinished unserialize items");
         wd->items = itemList;
         
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "\nfinished itemlist assigning");
         
         if (itemList->length == 0)
         {
@@ -524,17 +575,16 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) 
 {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Message Dropped! Reason: %d", reason);
+  APP_LOG(APP_LOG_LEVEL_ERROR, "ERROR: Message dropped. Reason: %d - %s", reason, translate_error(reason));
 }
 
 static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) 
 {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed! Reason: %d", reason);
+  APP_LOG(APP_LOG_LEVEL_ERROR, "ERROR: Appmessage send failed. Reason: %d - %s", reason, translate_error(reason));
 }
 
 static void outbox_sent_callback(DictionaryIterator *iterator, void *context) 
 {
-  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
 }
 
 
@@ -549,17 +599,26 @@ void config_provider(Window *window)
 
 void window_load(Window *window)
 {
-    myMenuLayer = menu_layer_create(GRect(0, 0, 144, 168));
+    int screenHeight = 168;
+    
+    //status bar shows up by default on aplite, have to subtract it from our total space
+    #ifndef PBL_COLOR
+        screenHeight = screenHeight - 16;
+    #endif
+    myMenuLayer = menu_layer_create(GRect(0, 0, 144, screenHeight));
     //removed this as we need a custom back button function
     //menu_layer_set_click_config_onto_window(myMenuLayer, window);
+    
+    //remove that ugly shadow
+    scroll_layer_set_shadow_hidden(menu_layer_get_scroll_layer(myMenuLayer), 1);
     
     Config* config = (Config*)malloc(sizeof(Config));
     loadPersistentConfig(config);
     
     WindowData* wd = createWindowData(config);
     window_set_user_data(window, wd);
+    window_set_background_color(window, config->backgroundColor);
     #ifdef PBL_COLOR
-        window_set_background_color(window, config->backgroundColor);
         menu_layer_set_normal_colors(myMenuLayer, config->backgroundColor, config->foregroundColor);
     #endif
     pageDepth = 1;
@@ -583,7 +642,6 @@ void window_load(Window *window)
  
 void window_unload(Window *window)
 {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "window unload called");
     WindowData* wd = (WindowData*)window_get_user_data(window);
     menu_layer_destroy(myMenuLayer);
     if (wd != 0)
@@ -592,11 +650,6 @@ void window_unload(Window *window)
 
 void init()
 {
-    #ifdef PBL_COLOR
-        backgroundColor = GColorLightGray;
-        highlightColor = GColorRed;
-        altBackgroundColor = GColorDarkGray;
-    #endif
     //register networking callbacks
     app_message_register_inbox_received(inbox_received_callback);
     app_message_register_inbox_dropped(inbox_dropped_callback);

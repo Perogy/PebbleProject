@@ -36,6 +36,4 @@ void unSerializeProjectsString(ProjectStruct* projectList, char* projectNamesStr
 {
     projectList->projects = splitString(projectNamesString, '|', &projectList->length);
     projectList->projectIDs = splitString(projectIDsString, '|', &projectList->length);
-    outputArrayContents(projectList->projects, projectList->length);
-    outputArrayContents(projectList->projectIDs, projectList->length);
 }
