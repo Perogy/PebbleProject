@@ -474,6 +474,14 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
                 }
                 return;
             break;
+            case ERRORMSG:
+                while (window_stack_get_top_window() != window)
+                {
+                    window_stack_pop(1);
+                }
+                displayMessage(t->value->cstring, 100);
+                return;
+            break;
             case CONFIG:
                 configStr = (char*)calloc(t->length, sizeof(char));
                 strcpy(configStr, t->value->cstring);

@@ -1,7 +1,10 @@
 var xhrRequest = function (url, type, callback) {
   var xhr = new XMLHttpRequest();
   xhr.onload = function () {
-    callback(this.responseText);
+      if(this.status == 200)
+          callback(this.responseText);
+      else
+          sendErrorString("Error:Status " + this.status);
   };
   xhr.open(type, url);
   xhr.send();
@@ -10,52 +13,52 @@ var xhrRequest = function (url, type, callback) {
 
 function getItems(responseText)
 {
-    // responseText contains a JSON object with item info
-    var json = JSON.parse(responseText);
-    
-    //check if query was a "Today" query and go into the "data" section if it is
-    if (json[0])
-    {
-        if (json[0].hasOwnProperty("query"))
+        // responseText contains a JSON object with item info
+        var json = JSON.parse(responseText);
+        
+        //check if query was a "Today" query and go into the "data" section if it is
+        if (json[0])
         {
-            json = json[0].data;
+            if (json[0].hasOwnProperty("query"))
+            {
+                json = json[0].data;
+            }
         }
-    }
-    
-    if (json[0])
-    {
-        if (!json[0].hasOwnProperty("id"))
+        
+        if (json[0])
         {
-            sendErrorMessage(3);
-            return;
+            if (!json[0].hasOwnProperty("id"))
+            {
+                sendErrorMessage(3);
+                return;
+            }
         }
-    }
+        
+        // Conditions
+        var itemNames = "";
+        var itemIDs = "";
+        for(var i=0;i<json.length;i++)
+        {
+            itemNames = itemNames + json[i].content.replace("|", "") + " |";
+            itemIDs = itemIDs  + json[i].id + "|";
+        }
     
-    // Conditions
-    var itemNames = "";
-    var itemIDs = "";
-    for(var i=0;i<json.length;i++)
-    {
-        itemNames = itemNames + json[i].content.replace("|", "") + " |";
-        itemIDs = itemIDs  + json[i].id + "|";
-    }
-
-    var dictionary = 
-    {
-        "ITEM_NAMES": itemNames,
-        "ITEM_IDS": itemIDs
-    };
-
-    // Send to Pebble
-    Pebble.sendAppMessage(dictionary,
-                          function(e) 
-                          {
-                              
-                          },
-                          function(e) 
-                          {
-                              console.log("Data did not transfer to pebble successfully");
-                          });   
+        var dictionary = 
+        {
+            "ITEM_NAMES": itemNames,
+            "ITEM_IDS": itemIDs
+        };
+    
+        // Send to Pebble
+        Pebble.sendAppMessage(dictionary,
+                              function(e) 
+                              {
+                                  
+                              },
+                              function(e) 
+                              {
+                                  console.log("Data did not transfer to pebble successfully");
+                              });  
 }
 
 function getAllItemsForTimeline(responseText)
@@ -246,6 +249,23 @@ function sendErrorMessage(code)
                           });   
 }
 
+function sendErrorString(errorMsg)
+{
+    var dictionary = 
+        {
+            "ERRORMSG": errorMsg
+        };
+        Pebble.sendAppMessage(dictionary,
+                          function(e) 
+                          {
+                              
+                          },
+                          function(e) 
+                          {
+                              console.log("Data did not transfer to pebble successfully");
+                          });   
+}
+
 function processTodoistData() 
 {
     var url = "https://todoist.com/API/login?email=" +
@@ -281,8 +301,16 @@ function getItemsForSelectedProject(projectID)
 
 function getItemsForToday()
 {
-    var url = "https://api.todoist.com/API/query?queries=[\"Today\"]&token=" + localStorage.getItem("todoistMiniToken");
-    xhrRequest(url, 'GET', getItems);
+    try
+    {
+        var url = "https://api.todoist.com/API/query?queries=[\"Today\"]&token=" + localStorage.getItem("todoistMiniToken");
+        xhrRequest(url, 'GET', getItems);  
+    }
+    
+    catch (errormsg)
+    {
+        sendErrorString(errormsg);
+    }
 }
 
 function getTimelineItemsFor7Days()
@@ -303,8 +331,6 @@ function markItemAsCompleted(itemID)
 Pebble.addEventListener('ready', 
     function(e) 
     {
-        //temporary to test what happens when there is no token
-        localStorage.removeItem("token");
         if (localStorage.getItem("todoistMiniToken") === null)
         {
             sendWaitingMessageAndPerformAction(1);

@@ -15,6 +15,7 @@
 #define ERROR 7
 #define CONFIG 8
 #define TIMELINE_JSON 9
+#define ERRORMSG 10
     
 #define TEXT_SCROLL_INTERVAL 150
 
