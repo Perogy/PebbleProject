@@ -91,6 +91,7 @@
 		var loginData = {email:document.getElementById('todoistEmail').value, password:document.getElementById('todoistPassword').value, googleToken:false};
 		console.log(loginData);
 		var return_to = getQueryParam('return_to', 'pebblejs://close#');
+		console.log(return_to + encodeURIComponent(JSON.stringify(loginData)));
 		location.href = return_to + encodeURIComponent(JSON.stringify(loginData));
 	}
 	
