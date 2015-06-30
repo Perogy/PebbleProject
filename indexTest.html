@@ -90,7 +90,7 @@
 	function loginTodoist() {
 		var loginData = {email:document.getElementById('todoistEmail').value, password:document.getElementById('todoistPassword').value, googleToken:false};
 		var return_to = getQueryParam('return_to', 'pebblejs://close#');
-		console.log(return_to + encodeURIComponent(JSON.stringify(loginData));
+		console.log(return_to + encodeURIComponent(JSON.stringify(loginData)));
 		location.href = return_to + encodeURIComponent(JSON.stringify(loginData));
 		
 	}
