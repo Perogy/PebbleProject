@@ -269,7 +269,7 @@ function sendErrorString(errorMsg)
 function processTodoistData() 
 {
     var url = "https://todoist.com/API/login?email=" +
-    localStorage.getItem("todoistEmail") + "&password=" + localStorage.getItem("todoistPassword");
+    encodeURIComponent(localStorage.getItem("todoistEmail")) + "&password=" + encodeURIComponent(localStorage.getItem("todoistPassword"));
     localStorage.removeItem("todoistEmail");
     localStorage.removeItem("todoistPassword");
     //note that xhr request is ASYNCHRONOUS everything after it in this function will get executed
@@ -280,7 +280,7 @@ function processTodoistData()
 function processTodoistDataWithGoogle()
 {
     var url = "https://todoist.com/API/loginWithGoogle?email=" +
-    localStorage.getItem("googleEmail") + "&oauth2_token=" + localStorage.getItem("googleToken");
+    encodeURIComponent(localStorage.getItem("googleEmail")) + "&oauth2_token=" + encodeURIComponent(localStorage.getItem("googleToken"));
     //note that xhr request is ASYNCHRONOUS everything after it in this function will get executed
     //before it is even finished the next path of execution HAS to be in the callback function
     xhrRequest(url, 'GET', getToken);
@@ -288,41 +288,33 @@ function processTodoistDataWithGoogle()
 
 function getProjectsFromToken()
 {
-    var url = "https://todoist.com/API/getProjects?token=" + localStorage.getItem("todoistMiniToken");
+    var url = "https://todoist.com/API/getProjects?token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
     xhrRequest(url, 'GET', getProjects);
 }
 
 function getItemsForSelectedProject(projectID)
 {
     var url = "https://todoist.com/API/getUncompletedItems?project_id=" +
-    projectID + "&token=" + localStorage.getItem("todoistMiniToken");
+    encodeURIComponent(projectID) + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
     xhrRequest(url, 'GET', getItems);
 }
 
 function getItemsForToday()
 {
-    try
-    {
-        var url = "https://api.todoist.com/API/query?queries=[\"Today\"]&token=" + localStorage.getItem("todoistMiniToken");
-        xhrRequest(url, 'GET', getItems);  
-    }
-    
-    catch (errormsg)
-    {
-        sendErrorString(errormsg);
-    }
+    var url = "https://todoist.com/API/query?queries=" + encodeURIComponent("[\"Today\"]") + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
+    xhrRequest(url, 'GET', getItems);
 }
 
 function getTimelineItemsFor7Days()
 {
-    var url = "https://api.todoist.com/API/query?queries=[\"7 days\"]&token=" + localStorage.getItem("todoistMiniToken");
+    var url = "https://api.todoist.com/API/query?queries=[\"7 days\"]&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
     xhrRequest(url, 'GET', getAllItemsForTimeline);
 }
 
 function markItemAsCompleted(itemID)
 {
-    var url = "https://todoist.com/API/completeItems?ids=[" +
-    itemID + "]&token=" + localStorage.getItem("todoistMiniToken");
+    var url = "https://todoist.com/API/completeItems?ids=" +
+    encodeURIComponent("[" + itemID + "]") + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
     xhrRequest(url, 'GET', markItem);
 }
 
@@ -331,6 +323,7 @@ function markItemAsCompleted(itemID)
 Pebble.addEventListener('ready', 
     function(e) 
     {
+        //localStorage.removeItem("todoistMiniToken");
         if (localStorage.getItem("todoistMiniToken") === null)
         {
             sendWaitingMessageAndPerformAction(1);
@@ -399,6 +392,10 @@ function openConfig(e)
 
 function closeConfig(e) {
     
+    //pebble does not seem to handle encoded %2B properly (makes it a space instead of a plus sign)
+    //Possibly replace spaces with plus signs... unfortunately this would screw up anything that actually had a space in it (a password for example)
+    
+    console.log("response: " + e.response);
     var loginData = JSON.parse(decodeURIComponent(e.response));
     
     if (loginData.type == "configData")
@@ -417,6 +414,7 @@ function closeConfig(e) {
     }
     else
     {
+        
         localStorage.setItem("todoistEmail", loginData.email);
         localStorage.setItem("todoistPassword", loginData.password);
         sendWaitingMessageAndPerformAction(4);

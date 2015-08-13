@@ -1,5 +1,4 @@
-#ifndef _PROJECTS_H_
-#define _PROJECTS_H_
+#pragma once
 
 #include <pebble.h>
 #include "CustomFunctions.h"
@@ -15,5 +14,3 @@ ProjectStruct* createEmptyProjectList();
 ProjectStruct* createProjectList(char** projects, char** projectIDs, int length);
 void destroyProjectList(ProjectStruct* ps);
 void unSerializeProjectsString(ProjectStruct* projectList, char* projectNamesString, char* projectIDsString);
-
-#endif

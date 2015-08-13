@@ -4,7 +4,12 @@
 #include "Main.h"
 
 void displayMessage(char* errorMessage, int type)
-{   
+{
+    //clear all other windows off the stack except main window
+    while (window_stack_get_top_window() != window)
+    {
+        window_stack_pop(1);
+    }
     TextLayer* errorTextLayer = 0;
     ScrollLayer* errorScrollLayer = 0;
     AppTimer* loadingTimeoutTimer = 0;
@@ -23,10 +28,6 @@ void displayMessage(char* errorMessage, int type)
 
 void loadingScreenTimer(void* data)
 {
-    while (window_stack_get_top_window() != window)
-    {
-        window_stack_pop(1);
-    }
     displayMessage("Loading timed out. You may have lost connection, or have a poor connection to the internet.", 100);
 }
 

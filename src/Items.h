@@ -1,5 +1,4 @@
-#ifndef _ITEMS_H_
-#define _ITEMS_H_
+#pragma once
 
 #include <pebble.h>
 #include "CustomFunctions.h"
@@ -17,5 +16,3 @@ ItemStruct* createItemList(char** items, char** itemIDs, int length);
 void destroyItemList(ItemStruct* is);
 void unSerializeItemsString(ItemStruct* itemList, char* itemNamesString, char* itemIDsString);
 void setChecked(ItemStruct* is, int index);
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef _ERRORWINDOW_H_
-#define _ERRORWINDOW_H_
+#pragma once
 
 #include <pebble.h>
 #include "ErrorMessage.h"
@@ -21,7 +20,3 @@ void displayMessage(char* errorMessage, int type);
 void loadingScreenTimer(void* data);
 void errorWindow_unload(Window* window);
 void errorWindow_load(Window* window);
-    
-
-
-#endif
