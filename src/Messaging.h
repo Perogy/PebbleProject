@@ -15,6 +15,11 @@
 #define CONFIG 8
 #define TIMELINE_JSON 9
 #define ERRORMSG 10
+#define ITEM_DATES 11
+#define SELECTED_ITEM_RECURRING 12
+#define ITEM_DUE_DATES 13
+#define PROJECT_INDENTATION 14
+#define ITEM_INDENTATION 15
     
 void sendItemIDToPhone(int index);
 void sendProjectIDToPhone(int index);

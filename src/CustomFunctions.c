@@ -1,11 +1,23 @@
 #include <pebble.h>
 #include <ctype.h>
 
+char* stringToLower(char* str)
+{
+    char* newStr = (char*)malloc((int)strlen(str) + 1);
+    int i;
+    for(i=0; i < (int)strlen(str); i++)
+    {
+        newStr[i] = tolower((int)str[i]);
+    }
+    newStr[i] = '\0';
+    return newStr;
+}
+
 char* getSubString(char* str, int startIndex, int endIndex)
 {
     char* newStr = (char*)malloc(endIndex - startIndex + 1);
     int count = 0;
-    for(int i = startIndex; i<endIndex; i++)
+    for(int i = startIndex; i < endIndex; i++)
     {
         newStr[count] = str[i];
         count++;

@@ -33,20 +33,49 @@ function getItems(responseText)
                 return;
             }
         }
+    
+    var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         
+    
         // Conditions
         var itemNames = "";
         var itemIDs = "";
+        var itemDates = "";
+        var itemDueDates = "";
+        var itemIndentation = "";
+    
         for(var i=0;i<json.length;i++)
         {
             itemNames = itemNames + json[i].content.replace("|", "") + " |";
             itemIDs = itemIDs  + json[i].id + "|";
+            if (json[i].date_string == "null")
+                itemDates = itemDates + "|";
+            else
+                itemDates = itemDates + json[i].date_string + "|";
+            itemIndentation = itemIndentation + json[i].indent + "|";
+            if (json[i].due_date === null)
+            {
+                itemDueDates = itemDueDates + "|"; 
+            }
+            else
+            {
+                var d = new Date(json[i].due_date);
+                //if the time is 23:59 this specifies "no date"
+                if ((d.getHours() == 23) && (d.getMinutes() == 59))
+                    itemDueDates = itemDueDates + monthNames[d.getMonth()] + " " + d.getDate() + "|";
+                else
+                    itemDueDates = itemDueDates + monthNames[d.getMonth()] + " " + d.getDate() + " " + d.getHours() + ":" + d.getMinutes()  + "|";  
+            }
         }
     
         var dictionary = 
         {
             "ITEM_NAMES": itemNames,
-            "ITEM_IDS": itemIDs
+            "ITEM_IDS": itemIDs,
+            "ITEM_DATES": itemDates,
+            "ITEM_DUE_DATES": itemDueDates,
+            "ITEM_INDENTATION": itemIndentation
         };
     
         // Send to Pebble
@@ -124,21 +153,25 @@ function getProjects(responseText)
     // Conditions
     var projectNames = "";
     var projectIDs = "";
+    var projectIndentation = "";
     
     //put today project in (custom)
     projectNames = "Today |";
     projectIDs = "0|";
+    projectIndentation = "1|";
     
     for(var i=0;i<json.length;i++)
     {
         projectNames = projectNames + json[i].name.replace("|", "")  + " |";
         projectIDs = projectIDs  + json[i].id + "|";
+        projectIndentation = projectIndentation + json[i].indent + "|";
     }
 
     var dictionary = 
     {
         "PROJECT_NAMES": projectNames,
-        "PROJECT_IDs": projectIDs
+        "PROJECT_IDs": projectIDs,
+        "PROJECT_INDENTATION": projectIndentation
     };
 
     // Send to Pebble
@@ -187,6 +220,24 @@ function markItem(responseText)
                               console.log("Data did not transfer to pebble successfully");
                           });   
     }
+    
+}
+
+function markRecurringItem(responseText)
+{
+        var dictionary = 
+        {
+            "SELECTED_ITEM": "1"
+        };
+        Pebble.sendAppMessage(dictionary,
+                          function(e) 
+                          {
+                              
+                          },
+                          function(e) 
+                          {
+                              console.log("Data did not transfer to pebble successfully");
+                          });   
     
 }
 
@@ -318,6 +369,13 @@ function markItemAsCompleted(itemID)
     xhrRequest(url, 'GET', markItem);
 }
 
+function markRecurringItemAsCompleted(itemID)
+{
+    var url = "https://todoist.com/API/updateRecurringDate?ids=" +
+    encodeURIComponent("[" + itemID + "]") + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
+    xhrRequest(url, 'GET', markRecurringItem);
+}
+
 
 // Listen for when the watchface is opened
 Pebble.addEventListener('ready', 
@@ -348,6 +406,10 @@ Pebble.addEventListener('appmessage',
     if(e.payload.SELECTED_ITEM)
     {
         markItemAsCompleted(e.payload.SELECTED_ITEM);
+    }
+    if(e.payload.SELECTED_ITEM_RECURRING)
+    {
+        markRecurringItemAsCompleted(e.payload.SELECTED_ITEM_RECURRING);
     }
   }                     
 );
@@ -395,7 +457,7 @@ function closeConfig(e) {
     //pebble does not seem to handle encoded %2B properly (makes it a space instead of a plus sign)
     //Possibly replace spaces with plus signs... unfortunately this would screw up anything that actually had a space in it (a password for example)
     
-    console.log("response: " + e.response);
+    //console.log("response: " + e.response);
     var loginData = JSON.parse(decodeURIComponent(e.response));
     
     if (loginData.type == "configData")

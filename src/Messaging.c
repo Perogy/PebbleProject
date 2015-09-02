@@ -31,8 +31,12 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
     
     char* projectNamesStr = 0;
     char* projectIDsStr = 0;
+    char* projectIndentationStr = 0;
     char* itemNamesStr = 0;
     char* itemIDsStr = 0;
+    char* itemDatesStr = 0;
+    char* itemDueDatesStr = 0;
+    char* itemIndentationStr = 0;
     char* strTimeline = 0;
     char* configStr = 0;
     WindowData* wd = (WindowData*)window_get_user_data(window);
@@ -51,6 +55,10 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
                 projectIDsStr = (char*)calloc(t->length, sizeof(char));
                 strcpy(projectIDsStr, t->value->cstring);
             break;
+            case PROJECT_INDENTATION:
+                projectIndentationStr = (char*)calloc(t->length, sizeof(char));
+                strcpy(projectIndentationStr, t->value->cstring);
+            break;
             case ITEM_NAMES:
                 itemNamesStr = (char*)calloc(t->length, sizeof(char));
                 strcpy(itemNamesStr, t->value->cstring);
@@ -58,6 +66,18 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
             case ITEM_IDS:
                 itemIDsStr = (char*)calloc(t->length, sizeof(char));
                 strcpy(itemIDsStr, t->value->cstring);
+            break;
+            case ITEM_DATES:
+                itemDatesStr = (char*)calloc(t->length, sizeof(char));
+                strcpy(itemDatesStr, t->value->cstring);
+            break;
+            case ITEM_DUE_DATES:
+                itemDueDatesStr = (char*)calloc(t->length, sizeof(char));
+                strcpy(itemDueDatesStr, t->value->cstring);
+            break;
+            case ITEM_INDENTATION:
+                itemIndentationStr = (char*)calloc(t->length, sizeof(char));
+                strcpy(itemIndentationStr, t->value->cstring);
             break;
             case TIMELINE_JSON:
                 strTimeline = (char*)calloc(t->length, sizeof(char));
@@ -76,6 +96,7 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
                 else
                 {
                     displayMessage("Failed to mark item as completed. This may be due to a connection issue.", 101);
+                    window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
                 }
             break;
             case WAITING:
@@ -133,7 +154,7 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
     if (projectNamesStr)
     {
         ProjectStruct* projectList = createEmptyProjectList();
-        unSerializeProjectsString(projectList, projectNamesStr, projectIDsStr);
+        unSerializeProjectsString(projectList, projectNamesStr, projectIDsStr, projectIndentationStr);
         setProjects(wd, projectList);
         menu_layer_reload_data(myMenuLayer);
         MenuIndex mi;
@@ -141,10 +162,13 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
         mi.section = 0;
         menu_layer_set_selected_index(myMenuLayer, mi, MenuRowAlignCenter, true);
         
+        
+        
         //start scrolling the text of the menu item
         wd->textScrollTimer = app_timer_register(wd->config->scrollSpeed, timerTick, NULL);
         free(projectNamesStr);
         free(projectIDsStr);
+        free(projectIndentationStr);
         
         //pop the loading screen (or screens) off the window stack
         while (window_stack_get_top_window() != window)
@@ -156,7 +180,7 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
     if (itemNamesStr)
     {
         ItemStruct* itemList = createEmptyItemList();
-        unSerializeItemsString(itemList, itemNamesStr, itemIDsStr);
+        unSerializeItemsString(itemList, itemNamesStr, itemIDsStr, itemDatesStr, itemDueDatesStr, itemIndentationStr);
         wd->items = itemList;
         
         
@@ -165,6 +189,9 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
             displayMessage("There are no items in this project.", NON_FATAL);
             free(itemNamesStr);
             free(itemIDsStr);
+            free(itemDatesStr);
+            free(itemDueDatesStr);
+            free(itemIndentationStr);
             return;
         }
         
@@ -176,6 +203,9 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
         menu_layer_set_selected_index(myMenuLayer, mi, MenuRowAlignCenter, true);
         free(itemNamesStr);
         free(itemIDsStr);
+        free(itemDatesStr);
+        free(itemDueDatesStr);
+        free(itemIndentationStr);
         //pop the loading screen (or screens) off the window stack
         while (window_stack_get_top_window() != window)
         {

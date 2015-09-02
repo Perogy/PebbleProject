@@ -7,10 +7,11 @@ typedef struct proj
 {
     char** projects;
     char** projectIDs;
+    char** indentation;
     int length;
 } ProjectStruct;
 
 ProjectStruct* createEmptyProjectList();
-ProjectStruct* createProjectList(char** projects, char** projectIDs, int length);
+ProjectStruct* createProjectList(char** projects, char** projectIDs, char** indentation, int length);
 void destroyProjectList(ProjectStruct* ps);
-void unSerializeProjectsString(ProjectStruct* projectList, char* projectNamesString, char* projectIDsString);
+void unSerializeProjectsString(ProjectStruct* projectList, char* projectNamesString, char* projectIDsString, char* projectIndentationString);

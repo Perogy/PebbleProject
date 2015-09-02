@@ -3,11 +3,16 @@
         "CONFIG": 8,
         "ERROR": 7,
         "ERRORMSG": 10,
+        "ITEM_DATES": 11,
+        "ITEM_DUE_DATES": 13,
         "ITEM_IDS": 4,
+        "ITEM_INDENTATION": 15,
         "ITEM_NAMES": 3,
         "PROJECT_IDs": 1,
+        "PROJECT_INDENTATION": 14,
         "PROJECT_NAMES": 0,
         "SELECTED_ITEM": 5,
+        "SELECTED_ITEM_RECURRING": 12,
         "SELECTED_PROJECT": 2,
         "TIMELINE_JSON": 9,
         "WAITING": 6
@@ -36,7 +41,7 @@
         "basalt"
     ],
     "uuid": "156ab4ed-c65c-4dca-ab42-af435f784aa1",
-    "versionLabel": "1.5",
+    "versionLabel": "1.6",
     "watchapp": {
         "watchface": false
     }
