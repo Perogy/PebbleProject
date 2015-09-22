@@ -65,3 +65,18 @@ void loadPersistentConfig(Config* config)
         initDefaults(config);
     }
 }
+
+//gets whether the startup message for a new version has been shown
+bool loadMessageShown()
+{
+    persist_delete(MESSAGE_KEY);
+    if (persist_exists(MESSAGE_KEY)) 
+        return 1;
+    else
+        return 0;
+}
+//sets the startup message for a new version to shown
+void saveMessageShown()
+{
+    persist_write_bool(MESSAGE_KEY, 1);
+}

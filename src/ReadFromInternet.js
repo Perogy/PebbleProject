@@ -10,6 +10,26 @@ var xhrRequest = function (url, type, callback) {
   xhr.send();
 };
 
+function getWatchVersion()
+{
+    var platform;
+    if(Pebble.getActiveWatchInfo) {
+      var watchinfo= Pebble.getActiveWatchInfo();
+      platform=watchinfo.platform;
+      } else {
+        platform="aplite";
+      }
+    return platform;
+}
+
+//if integer is 0 return a string 00. Used for times
+function doubleZeroCheck(number)
+{
+    if (number === 0)
+        return "00";
+    else
+        return number;
+}
 
 function getItems(responseText)
 {
@@ -44,6 +64,7 @@ function getItems(responseText)
         var itemDates = "";
         var itemDueDates = "";
         var itemIndentation = "";
+        
     
         for(var i=0;i<json.length;i++)
         {
@@ -61,13 +82,16 @@ function getItems(responseText)
             else
             {
                 var d = new Date(json[i].due_date);
-                //if the time is 23:59 this specifies "no date"
+                //if the time is 23:59 this specifies "no time"
                 if ((d.getHours() == 23) && (d.getMinutes() == 59))
                     itemDueDates = itemDueDates + monthNames[d.getMonth()] + " " + d.getDate() + "|";
                 else
-                    itemDueDates = itemDueDates + monthNames[d.getMonth()] + " " + d.getDate() + " " + d.getHours() + ":" + d.getMinutes()  + "|";  
+                    itemDueDates = itemDueDates + monthNames[d.getMonth()] + " " + d.getDate() + " " + doubleZeroCheck(d.getHours()) + ":" + doubleZeroCheck(d.getMinutes())  + "|";  
             }
+            
         }
+    
+        
     
         var dictionary = 
         {
@@ -77,6 +101,7 @@ function getItems(responseText)
             "ITEM_DUE_DATES": itemDueDates,
             "ITEM_INDENTATION": itemIndentation
         };
+    
     
         // Send to Pebble
         Pebble.sendAppMessage(dictionary,
@@ -93,32 +118,32 @@ function getItems(responseText)
 function getAllItemsForTimeline(responseText)
 {
     // responseText contains a JSON object with item info
-    var json = JSON.parse(responseText);
+        var json = JSON.parse(responseText);
+        json = json.Items;
     
-    // Conditions
-    var itemNames = "";
-    var itemIDs = "";
-    for(var i=0;i<json.length;i++)
-    {
-        itemNames = itemNames + json[i].content + " |";
-        itemIDs = itemIDs  + json[i].id + "|";
-    }
-
-    var dictionary = 
-    {
-        "TIMELINE_JSON": json
-    };
-
-    // Send to Pebble
-    Pebble.sendAppMessage(dictionary,
-                          function(e) 
-                          {
-                              
-                          },
-                          function(e) 
-                          {
-                              console.log("Data did not transfer to pebble successfully");
-                          });   
+    
+        for(var i=0;i<json.length;i++)
+        {
+            if (json[i].due_date)
+            {
+                var date = new Date(json[i].due_date);
+                //Create timeline array of items that have due dates
+                var pin = {
+                "id": "TodoistMiniItem-" + json[i].id,
+                "time": date.toISOString(),
+                "layout": {
+                  "type": "genericPin",
+                  "title": json[i].content,
+                  "tinyIcon": "system://images/SCHEDULED_EVENT"
+                  }
+                };
+                
+                insertUserPin(pin, function(responseText) 
+                { 
+                    
+                });
+            }
+        }   
 }
 
 function getToken(responseText) 
@@ -237,7 +262,7 @@ function markRecurringItem(responseText)
                           function(e) 
                           {
                               console.log("Data did not transfer to pebble successfully");
-                          });   
+                          });
     
 }
 
@@ -356,9 +381,10 @@ function getItemsForToday()
     xhrRequest(url, 'GET', getItems);
 }
 
-function getTimelineItemsFor7Days()
+function pinTimelineItems()
 {
-    var url = "https://api.todoist.com/API/query?queries=[\"7 days\"]&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
+    //var url = "https://api.todoist.com/API/query?queries=" + encodeURIComponent("[\"No Due Date\"]") + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
+    var url = "https://api.todoist.com/API/v6/sync?token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken")) + "&seq_no=" + encodeURIComponent("0") + "&seq_no_global=" + encodeURIComponent("0") + "&resource_types=" + encodeURIComponent("[\"items\"]");
     xhrRequest(url, 'GET', getAllItemsForTimeline);
 }
 
@@ -366,6 +392,18 @@ function markItemAsCompleted(itemID)
 {
     var url = "https://todoist.com/API/completeItems?ids=" +
     encodeURIComponent("[" + itemID + "]") + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
+    var pin = {
+                "id": "pin-" + itemID
+              };
+    if (getWatchVersion() == "basalt")
+    {
+        //delete pin from timeline if completed
+        deleteUserPin(pin, function(responseText) 
+        {
+            
+        });
+    }
+    
     xhrRequest(url, 'GET', markItem);
 }
 
@@ -374,6 +412,11 @@ function markRecurringItemAsCompleted(itemID)
     var url = "https://todoist.com/API/updateRecurringDate?ids=" +
     encodeURIComponent("[" + itemID + "]") + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
     xhrRequest(url, 'GET', markRecurringItem);
+    if (getWatchVersion() == "basalt")
+    {
+        //update timeline pins if recurring item completed
+        pinTimelineItems();
+    }
 }
 
 
@@ -388,6 +431,8 @@ Pebble.addEventListener('ready',
         }
         else
         {
+            if (getWatchVersion() == "basalt")
+                pinTimelineItems();
             sendWaitingMessageAndPerformAction(2);
         }
     }
@@ -488,3 +533,61 @@ Pebble.addEventListener('showConfiguration', openConfig);
 
 //Listen for configuration window closing
 Pebble.addEventListener('webviewclosed', closeConfig);
+
+
+
+
+
+
+/******************************* timeline lib *********************************/
+
+// The timeline public URL root
+var API_URL_ROOT = 'https://timeline-api.getpebble.com/';
+
+/**
+ * Send a request to the Pebble public web timeline API.
+ * @param pin The JSON pin to insert. Must contain 'id' field.
+ * @param type The type of request, either PUT or DELETE.
+ * @param callback The callback to receive the responseText after the request has completed.
+ */
+function timelineRequest(pin, type, callback) {
+  // User or shared?
+  var url = API_URL_ROOT + 'v1/user/pins/' + pin.id;
+
+  // Create XHR
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function () {
+    callback(this.responseText);
+  };
+  xhr.open(type, url);
+
+  // Get token
+  Pebble.getTimelineToken(function(token) {
+    // Add headers
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-User-Token', '' + token);
+
+    // Send
+    xhr.send(JSON.stringify(pin));
+  }, function(error) { sendErrorString("Timeline Error: " + error); });
+}
+
+/**
+ * Insert a pin into the timeline for this user.
+ * @param pin The JSON pin to insert.
+ * @param callback The callback to receive the responseText after the request has completed.
+ */
+function insertUserPin(pin, callback) {
+  timelineRequest(pin, 'PUT', callback);
+}
+
+/**
+ * Delete a pin from the timeline for this user.
+ * @param pin The JSON pin to delete.
+ * @param callback The callback to receive the responseText after the request has completed.
+ */
+function deleteUserPin(pin, callback) {
+  timelineRequest(pin, 'DELETE', callback);
+}
+
+/***************************** end timeline lib *******************************/

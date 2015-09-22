@@ -687,7 +687,7 @@ void window_load(Window *window)
     window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
     
     layer_add_child(window_get_root_layer(window), menu_layer_get_layer(myMenuLayer));
-    
+        
 
 }
  

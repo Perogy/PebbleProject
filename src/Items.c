@@ -69,7 +69,8 @@ void unSerializeItemsString(ItemStruct* itemList, char* itemNamesString, char* i
     {
         if ((strstr(stringToLower(itemList->itemDates[i]), "every") != 0) || (strstr(stringToLower(itemList->itemDates[i]), "after") != 0)
            || (strstr(stringToLower(itemList->itemDates[i]), "daily") != 0) || (strstr(stringToLower(itemList->itemDates[i]), "monthly") != 0)
-           || (strstr(stringToLower(itemList->itemDates[i]), "weekly") != 0) || (strstr(stringToLower(itemList->itemDates[i]), "yearly") != 0))
+           || (strstr(stringToLower(itemList->itemDates[i]), "weekly") != 0) || (strstr(stringToLower(itemList->itemDates[i]), "yearly") != 0) 
+           || (strstr(stringToLower(itemList->itemDates[i]), "ev") != 0))
         {
             itemList->recurringTask[i] = 1;
         }
