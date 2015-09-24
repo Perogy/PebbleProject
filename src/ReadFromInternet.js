@@ -23,10 +23,10 @@ function getWatchVersion()
 }
 
 //if integer is 0 return a string 00. Used for times
-function doubleZeroCheck(number)
+function leadingZeroCheck(number)
 {
-    if (number === 0)
-        return "00";
+    if (number < 10)
+        return "0" + number;
     else
         return number;
 }
@@ -86,7 +86,7 @@ function getItems(responseText)
                 if ((d.getHours() == 23) && (d.getMinutes() == 59))
                     itemDueDates = itemDueDates + monthNames[d.getMonth()] + " " + d.getDate() + "|";
                 else
-                    itemDueDates = itemDueDates + monthNames[d.getMonth()] + " " + d.getDate() + " " + doubleZeroCheck(d.getHours()) + ":" + doubleZeroCheck(d.getMinutes())  + "|";  
+                    itemDueDates = itemDueDates + monthNames[d.getMonth()] + " " + d.getDate() + " " + d.getHours() + ":" + leadingZeroCheck(d.getMinutes())  + "|";  
             }
             
         }

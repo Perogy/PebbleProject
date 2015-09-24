@@ -177,14 +177,16 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
         }
         
         //display new version message if needed
-        if (!loadMessageShown())
-        {
-            displayMessage("Welcome to version 1.8, now with timeline support! Todoist Mini will now push all of your items with due dates to the timeline automatically \
-                           whenever the program is opened. Items will be removed from the timeline when you complete them within Todoist Mini, however please note that items will \
-                           not be removed from the timeline if they are completed anywhere outside of Todoist Mini (Ex/ todoist phone app, web app or native PC app). You can manually remove \
-                           items directly from the timeline by pressing the select button on them if you would like. Please email me with any issues: bradpaugh@gmail.com. Press back to return to the app.", 101);
-            saveMessageShown();
-        }
+        #ifdef PBL_COLOR
+            if (!loadMessageShown())
+            {
+                displayMessage("Welcome to version 1.8, now with timeline support! Todoist Mini will now push all of your items with due dates to the timeline automatically \
+whenever the program is opened.\n\nItems will be removed from the timeline when you complete them within Todoist Mini, however please note that items will \
+not be removed from the timeline if they are completed anywhere outside of Todoist Mini (Ex/ todoist phone app, web app or native PC app).\n\nYou can manually remove \
+items directly from the timeline by pressing the select button on them if you would like. \n\nPlease email me with any issues: \nbradpaugh@gmail.com. \n\nPress back to return to the app.", 101);
+                saveMessageShown();
+            }
+        #endif
 
     }
     if (itemNamesStr)

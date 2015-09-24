@@ -69,7 +69,7 @@ void loadPersistentConfig(Config* config)
 //gets whether the startup message for a new version has been shown
 bool loadMessageShown()
 {
-    persist_delete(MESSAGE_KEY);
+    //persist_delete(MESSAGE_KEY);
     if (persist_exists(MESSAGE_KEY)) 
         return 1;
     else

@@ -15,13 +15,13 @@ void displayMessage(char* errorMessage, int type)
     AppTimer* loadingTimeoutTimer = 0;
     ErrorMessage* em = createErrorMessage(errorMessage, type, errorScrollLayer, errorTextLayer, loadingTimeoutTimer);
     Window* errorWindow = window_create();
-
+    window_set_user_data(errorWindow, em);
     window_set_window_handlers(errorWindow, (WindowHandlers) 
     {
         .load = errorWindow_load,
         .unload = errorWindow_unload,
     });
-    window_set_user_data(errorWindow, em);
+    
 
     window_stack_push(errorWindow, true);
 }    
@@ -39,43 +39,62 @@ void errorWindow_unload(Window* window)
 void error_config_provider(Window *window) 
 {
     window_single_click_subscribe(BUTTON_ID_BACK, error_back_click_handler);
-    window_single_click_subscribe(BUTTON_ID_UP, error_up_click_handler);
-    window_single_click_subscribe(BUTTON_ID_DOWN, error_down_click_handler);
-    window_single_click_subscribe(BUTTON_ID_SELECT, error_select_callback);
+    //window_single_click_subscribe(BUTTON_ID_UP, error_up_click_handler);
+    //window_single_click_subscribe(BUTTON_ID_DOWN, error_down_click_handler);
+    //window_single_click_subscribe(BUTTON_ID_SELECT, error_select_callback);
 }
 
 void errorWindow_load(Window* window)
 {   
+    
     ErrorMessage* em = window_get_user_data(window);
     
     Layer *window_layer = window_get_root_layer(window);
-    GRect bounds = layer_get_frame(window_layer);
-    //scroll layer is pretty useless at this size but we'll keep it in here in case we ever need to show a scrolling message in the future
-    GRect max_text_bounds = GRect(0, 0, bounds.size.w, bounds.size.h);
     
+    ScrollLayerCallbacks callbacks = 
+        {
+            .click_config_provider = (ClickConfigProvider) error_config_provider
+        };
+    
+    //bounds of the window
+    GRect bounds = layer_get_frame(window_layer);
+    
+    //maximum amount of scrollable text content (the 5000 will be resized to the actual size of the content later)
+    GRect max_text_bounds = GRect(0, 0, bounds.size.w, 5000);
+    
+    GSize textSize = graphics_text_layout_get_content_size(em->message, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), max_text_bounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
+    
+    //setting the text content size to the actual size of the content now that we know what it is
+    if (textSize.h > bounds.size.h)
+        //add 4 for a bit of extra margin at the bottom
+        max_text_bounds.size.h = textSize.h + 4;
+    else
+        max_text_bounds.size.h = bounds.size.h;
+    
+    //should be set to the size the scroll layer actually takes up
     em->errorScrollLayer = scroll_layer_create(bounds);
-
-    //if the window is not a "loading" window
-    //if (em->type != LOADING)
-   // {
-        window_set_click_config_provider(window, (ClickConfigProvider) error_config_provider);
-    //}
-   // else
-    //{
-        //set a timeout on the loading window (may want to do this in javascript instead)
-        //em->loadingTimeoutTimer = app_timer_register(LOADING_TIMEOUT_INTERVAL, loadingScreenTimer, NULL);
-    //}
+    em->errorTextLayer = text_layer_create(max_text_bounds);
+    
+    //by setting the click provider through set callbacks it allows you to keep the original scrolling functionality while
+    //allowing you to add back or select button functionality.
+    scroll_layer_set_callbacks(em->errorScrollLayer, callbacks);
+    scroll_layer_set_click_config_onto_window(em->errorScrollLayer, window);
     
     if (em->type == LOADING)
+    {
         em->loadingTimeoutTimer = app_timer_register(LOADING_TIMEOUT_INTERVAL, loadingScreenTimer, NULL);
-
-    em->errorTextLayer = text_layer_create(max_text_bounds);
+        text_layer_set_text_alignment(em->errorTextLayer, GTextAlignmentCenter);
+    }
+    else
+    {
+        text_layer_set_text_alignment(em->errorTextLayer, GTextAlignmentLeft);
+    }
+    
     text_layer_set_text(em->errorTextLayer, em->message);
-    text_layer_set_font(em->errorTextLayer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-
-    text_layer_set_size(em->errorTextLayer, GSize(max_text_bounds.size.w, max_text_bounds.size.h));
-    text_layer_set_text_alignment(em->errorTextLayer, GTextAlignmentCenter);
-    scroll_layer_set_content_size(em->errorScrollLayer, GSize(bounds.size.w, bounds.size.h));
+    text_layer_set_font(em->errorTextLayer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+    
+    //total size of the content
+    scroll_layer_set_content_size(em->errorScrollLayer, GSize(bounds.size.w, max_text_bounds.size.h));
     
     #ifdef PBL_COLOR
         text_layer_set_background_color(em->errorTextLayer, GColorDarkCandyAppleRed);
