@@ -13,6 +13,25 @@ Window* window;
 MenuLayer* myMenuLayer;
 
 
+//Adds item to the project as obtained through the dictation API
+void addItem(char* itemText)
+{
+    WindowData* wd = (WindowData*)window_get_user_data(window);
+    DictionaryIterator *iter;
+    app_message_outbox_begin(&iter);
+
+    if (!iter) {
+      // Error creating outbound message
+      return;
+    }
+    strcat(itemText, "|");
+    strcat(itemText,wd->projects->projectIDs[wd->selectedProjectIndex]);
+    dict_write_cstring(iter, ADD_NEW_ITEM, itemText);
+    dict_write_end(iter);
+  
+    app_message_outbox_send();
+}
+
 //sends the project ID at specified index to the phone to get itemlist
 void sendProjectIDToPhone(int index)
 {
@@ -57,6 +76,10 @@ void sendItemIDToPhone(int index)
 void drawCheckbox(GContext *ctx, Layer *cell_layer, int index)
 {
     WindowData* wd = (WindowData*)window_get_user_data(window);
+    
+    //do not draw checkbox at all if it is the "add new" item
+    if (strcmp(wd->items->itemIDs[index],"0") == 0)
+        return;
     GRect cellBounds = layer_get_bounds(cell_layer);
     GPoint g = GPoint(cellBounds.size.w*.80 + CIRCLE_RADIUS, cellBounds.size.h/2.0);
     #ifdef PBL_COLOR
@@ -136,7 +159,6 @@ static uint16_t menu_get_num_sections_callback(MenuLayer *menu_layer, void *data
 
 void draw_row_callback_modern(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, void *callback_context)
 {
-    
     WindowData* wd = (WindowData*)window_get_user_data(window);
     #ifdef PBL_COLOR
         menu_layer_set_normal_colors(myMenuLayer, wd->config->altBackgroundColor, wd->config->altForegroundColor);
@@ -330,6 +352,7 @@ void draw_row_callback_modern(GContext *ctx, Layer *cell_layer, MenuIndex *cell_
 //this is executed when row is changed.
 void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, void *callback_context)
 {
+    displayMessage("what the fuck\n", 101);
     WindowData* wd = (WindowData*)window_get_user_data(window);
     if (!wd)
         return;
@@ -710,7 +733,7 @@ void init()
     app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
     
     window = window_create();
-    window_set_window_handlers(window, (WindowHandlers) 
+    window_set_window_handlers(window, (WindowHandlers)
     {
         .load = window_load,
         .unload = window_unload,

@@ -108,6 +108,10 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
                 {
                     displayMessage("Loading Projects...", 102);
                 }
+                if (t->value->int32 == 2)
+                {
+                    displayMessage("Writing Items to Timeline...", 102);
+                }
             break;
             case ERROR:
                 if (t->value->int32 == 1)
@@ -135,13 +139,19 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
             case CONFIG:
                 configStr = (char*)calloc(t->length, sizeof(char));
                 strcpy(configStr, t->value->cstring);
-                WindowData* wd = window_get_user_data(window);
                 setConfig(configStr, wd->config);
                 #ifdef PBL_COLOR
                     window_set_background_color(window, wd->config->backgroundColor);
                     menu_layer_set_normal_colors(myMenuLayer, wd->config->backgroundColor, wd->config->foregroundColor);
                 #endif
                 layer_mark_dirty(menu_layer_get_layer(myMenuLayer));
+            break;
+            case ADD_NEW_ITEM:
+                window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
+                //displayMessage("item added successfully", 101);
+                //reload items for current project
+                sendProjectIDToPhone(wd->selectedProjectIndex);
+                displayMessage("Loading...", 102);
             break;
             default:
                 displayMessage("Error: Unrecognized key in received data.", 101);
@@ -180,10 +190,9 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
         #ifdef PBL_COLOR
             if (!loadMessageShown())
             {
-                displayMessage("Welcome to version 1.8, now with timeline support! Todoist Mini will now push all of your items with due dates to the timeline automatically \
-whenever the program is opened.\n\nItems will be removed from the timeline when you complete them within Todoist Mini, however please note that items will \
-not be removed from the timeline if they are completed anywhere outside of Todoist Mini (Ex/ todoist phone app, web app or native PC app).\n\nYou can manually remove \
-items directly from the timeline by pressing the select button on them if you would like. \n\nPlease email me with any issues: \nbradpaugh@gmail.com. \n\nPress back to return to the app.", 101);
+                displayMessage("Welcome to version 1.9! \n\nI have added timeline support for aplite in this version as well as the ability to add new items to your list by using your voice! \
+You'll notice there is now an add new button at the bottom of every one of your projects. If you click this add new button it will initiate voice-to-text and allow you to add new items to any \
+of your projects. Of course this feature will only work on pebble devices with a microphone. \n\nPlease email me with any issues: \nbradpaugh@gmail.com. \n\nPress back to return to the app.", 101);
                 saveMessageShown();
             }
         #endif
@@ -225,29 +234,6 @@ items directly from the timeline by pressing the select button on them if you wo
         }
         wd->textScrollTimer = app_timer_register(wd->config->scrollSpeed, timerTick, NULL);
     }
-    
-    //probably dont actually need this
-    /*if (itemNamesStrTimeline)
-    {
-        ItemStruct* itemList = createEmptyItemList();
-        unSerializeItemsString(itemList, itemNamesStrTimeline, itemIDsStrTimeline);
-        wd->timelineItems = itemList;
-        
-        if (itemList->length == 0)
-        {
-            free(itemNamesStrTimeline);
-            free(itemIDsStrTimeline);
-            return;
-        }
-        
-        //pin to timeline
-        #ifdef PBL_COLOR
-            
-        #endif
-        
-        free(itemNamesStr);
-        free(itemIDsStr);
-    }*/
     
 }
 

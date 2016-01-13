@@ -3,7 +3,7 @@
 #include <pebble.h>
 #include "ErrorMessage.h"
     
-#define LOADING_TIMEOUT_INTERVAL 30000
+#define LOADING_TIMEOUT_INTERVAL 108000000
     
 //Error message types
 //FATAL = exit program when window unloads

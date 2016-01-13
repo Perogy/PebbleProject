@@ -35,13 +35,14 @@ function getItems(responseText)
 {
         // responseText contains a JSON object with item info
         var json = JSON.parse(responseText);
-        
+        var isToday = 0;
         //check if query was a "Today" query and go into the "data" section if it is
         if (json[0])
         {
             if (json[0].hasOwnProperty("query"))
             {
                 json = json[0].data;
+                isToday = 1;
             }
         }
         
@@ -54,8 +55,8 @@ function getItems(responseText)
             }
         }
     
-    var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         
     
         // Conditions
@@ -88,10 +89,21 @@ function getItems(responseText)
                 else
                     itemDueDates = itemDueDates + monthNames[d.getMonth()] + " " + d.getDate() + " " + d.getHours() + ":" + leadingZeroCheck(d.getMinutes())  + "|";  
             }
-            
         }
     
-        
+        //only put "Add New" if we are on basalt
+        if (getWatchVersion() == "basalt")
+        {
+            //cannot add items to "Today" project so we only add the "Add New" button if it's not a today project
+            if (!isToday)
+            {
+                itemNames = itemNames + "+ Add New |";
+                itemIDs = itemIDs + "0|";
+                itemDates = itemDates + "|";
+                itemDueDates = itemDueDates + "|";
+                itemIndentation = itemIndentation + "1|";   
+            }
+        }
     
         var dictionary = 
         {
@@ -111,7 +123,7 @@ function getItems(responseText)
                               },
                               function(e) 
                               {
-                                  console.log("Data did not transfer to pebble successfully");
+                                  console.log("Message Error:" + e.error.message);
                               });  
 }
 
@@ -199,15 +211,18 @@ function getProjects(responseText)
         "PROJECT_INDENTATION": projectIndentation
     };
 
+    console.log("\nfirmware major:" + Pebble.getActiveWatchInfo().firmware.major);
     // Send to Pebble
     Pebble.sendAppMessage(dictionary,
                           function(e) 
                           {
-                              
+                              //this should really show a loading message that says pinning timeline items
+                              if (Pebble.getActiveWatchInfo().firmware.major >= 3)
+                                  sendWaitingMessageAndPerformAction(5);
                           },
                           function(e) 
                           {
-                              console.log("Data did not transfer to pebble successfully");
+                              console.log("Message Error:" + e.error.message);
                           });   
 }
 
@@ -226,7 +241,7 @@ function markItem(responseText)
                           },
                           function(e) 
                           {
-                              console.log("Data did not transfer to pebble successfully");
+                              console.log("Message Error:" + e.error.message);
                           });   
     }
     else
@@ -242,7 +257,7 @@ function markItem(responseText)
                           },
                           function(e) 
                           {
-                              console.log("Data did not transfer to pebble successfully");
+                              console.log("Message Error:" + e.error.message);
                           });   
     }
     
@@ -261,22 +276,44 @@ function markRecurringItem(responseText)
                           },
                           function(e) 
                           {
-                              console.log("Data did not transfer to pebble successfully");
+                              console.log("Message Error:" + e.error.message);
                           });
     
+}
+
+function addItem(responseText)
+{
+    //add response error handling here
+        var dictionary = 
+        {
+            "ADD_NEW_ITEM": "1"
+        };
+        Pebble.sendAppMessage(dictionary,
+                          function(e) 
+                          {
+                              
+                          },
+                          function(e) 
+                          {
+                              console.log("Message Error:" + e.error.message);
+                          });
 }
 
 //code 1 = waiting for config
 //code 2 = waiting to load data
 function sendWaitingMessageAndPerformAction(code)
 {
-    //when we send app message it just needs to be a 1 or 2 (config or loading)
+    //when we send app message it just needs to be a 1 or 2 (config or loading) 3 = timeline loading
     var sendCode;
-    
-    if (code > 2)
+    console.log("\ncode=" + code);
+    if ((code == 3) || (code == 4))
         sendCode = 2;
+    else if (code == 5)
+        sendCode = 3;
     else
         sendCode = code;
+    
+ 
     var dictionary = 
         {
             "WAITING": sendCode
@@ -300,11 +337,17 @@ function sendWaitingMessageAndPerformAction(code)
                               {
                                    processTodoistData();  
                               }
+                              if (code == 5)
+                              {
+                                   pinTimelineItems();
+                              }
                           },
                           function(e) 
                           {
-                              console.log("Data did not transfer to pebble successfully");
-                          });   
+                              console.log("Fuckballs\n\nwat");
+                              console.log("Message Error:" + e.error.message);
+                          });
+      
 }
 
 //code 1 = Login failed
@@ -321,7 +364,7 @@ function sendErrorMessage(code)
                           },
                           function(e) 
                           {
-                              console.log("Data did not transfer to pebble successfully");
+                              console.log("Message Error:" + e.error.message);
                           });   
 }
 
@@ -338,7 +381,7 @@ function sendErrorString(errorMsg)
                           },
                           function(e) 
                           {
-                              console.log("Data did not transfer to pebble successfully");
+                              console.log("Message Error:" + e.error.message);
                           });   
 }
 
@@ -384,8 +427,16 @@ function getItemsForToday()
 function pinTimelineItems()
 {
     //var url = "https://api.todoist.com/API/query?queries=" + encodeURIComponent("[\"No Due Date\"]") + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
-    var url = "https://api.todoist.com/API/v6/sync?token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken")) + "&seq_no=" + encodeURIComponent("0") + "&seq_no_global=" + encodeURIComponent("0") + "&resource_types=" + encodeURIComponent("[\"items\"]");
-    xhrRequest(url, 'GET', getAllItemsForTimeline);
+    //var url = "https://api.todoist.com/API/v6/sync?token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken")) + "&seq_no=" + encodeURIComponent("0") + "&seq_no_global=" + encodeURIComponent("0") + "&resource_types=" + encodeURIComponent("[\"items\"]");
+    //xhrRequest(url, 'GET', getAllItemsForTimeline);
+}
+
+function addNewItem(itemText, projectID)
+{
+    var url = "https://todoist.com/API/addItem?content=" +
+    encodeURIComponent(itemText) + "&project_id=" + encodeURIComponent(projectID) + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
+    
+    xhrRequest(url, 'GET', addItem);
 }
 
 function markItemAsCompleted(itemID)
@@ -395,7 +446,7 @@ function markItemAsCompleted(itemID)
     var pin = {
                 "id": "pin-" + itemID
               };
-    if (getWatchVersion() == "basalt")
+    if (Pebble.getActiveWatchInfo().firmware.major >= 3)
     {
         //delete pin from timeline if completed
         deleteUserPin(pin, function(responseText) 
@@ -412,7 +463,7 @@ function markRecurringItemAsCompleted(itemID)
     var url = "https://todoist.com/API/updateRecurringDate?ids=" +
     encodeURIComponent("[" + itemID + "]") + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
     xhrRequest(url, 'GET', markRecurringItem);
-    if (getWatchVersion() == "basalt")
+    if (Pebble.getActiveWatchInfo().firmware.major >= 3)
     {
         //update timeline pins if recurring item completed
         pinTimelineItems();
@@ -424,15 +475,15 @@ function markRecurringItemAsCompleted(itemID)
 Pebble.addEventListener('ready', 
     function(e) 
     {
+        console.log("\nIn Ready");
         //localStorage.removeItem("todoistMiniToken");
         if (localStorage.getItem("todoistMiniToken") === null)
         {
+            console.log("\nIn Foundddd Token");
             sendWaitingMessageAndPerformAction(1);
         }
         else
         {
-            if (getWatchVersion() == "basalt")
-                pinTimelineItems();
             sendWaitingMessageAndPerformAction(2);
         }
     }
@@ -455,6 +506,11 @@ Pebble.addEventListener('appmessage',
     if(e.payload.SELECTED_ITEM_RECURRING)
     {
         markRecurringItemAsCompleted(e.payload.SELECTED_ITEM_RECURRING);
+    }
+    if(e.payload.ADD_NEW_ITEM)
+    {
+        var array = e.payload.ADD_NEW_ITEM.split("|");
+        addNewItem(array[0], array[1]);
     }
   }                     
 );
@@ -479,7 +535,7 @@ function setConfig(loginData)
                           },
                           function(e) 
                           {
-                              console.log("Data did not transfer to pebble successfully");
+                              console.log("Message Error:" + e.error.message);    
                           });   
 }
 
@@ -502,7 +558,7 @@ function closeConfig(e) {
     //pebble does not seem to handle encoded %2B properly (makes it a space instead of a plus sign)
     //Possibly replace spaces with plus signs... unfortunately this would screw up anything that actually had a space in it (a password for example)
     
-    //console.log("response: " + e.response);
+    console.log("response: " + e.response);
     var loginData = JSON.parse(decodeURIComponent(e.response));
     
     if (loginData.type == "configData")
@@ -557,7 +613,17 @@ function timelineRequest(pin, type, callback) {
   // Create XHR
   var xhr = new XMLHttpRequest();
   xhr.onload = function () {
-    callback(this.responseText);
+    if(this.status == 200) {
+          callback(this.responseText);
+    }
+    else if(this.status == 429) {
+        //this means we received an exceeded rate limit from the server, just return when this happens
+        return;
+    }
+    else
+    {
+         sendErrorString("Timeline Error:Status " + this.status);     
+    }    
   };
   xhr.open(type, url);
 

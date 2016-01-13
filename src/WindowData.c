@@ -20,7 +20,6 @@ void setProjects(WindowData* wd, ProjectStruct* projects)
     wd->projects = projects;
 }
 
-//needs to be changed to use the wd struct rather than global, but for now global is fine
 int getLengthOfCurrentPage()
 {
     WindowData* wd = (WindowData*)window_get_user_data(window);

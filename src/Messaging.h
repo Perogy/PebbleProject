@@ -20,7 +20,9 @@
 #define ITEM_DUE_DATES 13
 #define PROJECT_INDENTATION 14
 #define ITEM_INDENTATION 15
+#define ADD_NEW_ITEM 16
     
+void addItem(char* itemText);
 void sendItemIDToPhone(int index);
 void sendProjectIDToPhone(int index);
 void inbox_received_callback(DictionaryIterator *iterator, void *context);
