@@ -91,8 +91,8 @@ void drawCheckbox(GContext *ctx, Layer *cell_layer, int index)
     {
         GPoint g = GPoint(cellBounds.size.w*.80 + CIRCLE_RADIUS, cellBounds.size.h/2.0);
         //needed for aplite
-        graphics_context_set_fill_color(ctx, wd->config->foregroundColor);
-        #ifdef PBL_COLOR
+        graphics_context_set_fill_color(ctx, wd->config->highlightForegroundColor);
+        #ifdef PBL_SDK_3
             MenuIndex currentIndex = menu_layer_get_selected_index(myMenuLayer);
             int currentRow = currentIndex.row;
             if (index == currentRow)
@@ -352,7 +352,6 @@ void draw_row_callback_modern(GContext *ctx, Layer *cell_layer, MenuIndex *cell_
 //this is executed when row is changed.
 void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, void *callback_context)
 {
-    displayMessage("what the fuck\n", 101);
     WindowData* wd = (WindowData*)window_get_user_data(window);
     if (!wd)
         return;
@@ -375,13 +374,14 @@ void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, 
                     {
                         //have to reverse background/foreground color on aplite as it seems to auto invert
                         //and basalt does not (you set the colors in "normal colors" function).
-                        #ifdef PBL_COLOR
+                        #ifdef PBL_PLATFORM_BASALT
                             graphics_context_set_text_color(ctx, wd->config->highlightForegroundColor);
                             graphics_context_set_fill_color(ctx, wd->config->highlightBackgroundColor);
                             graphics_context_set_stroke_color(ctx, wd->config->highlightForegroundColor);
                         #else
-                            graphics_context_set_text_color(ctx, wd->config->highlightBackgroundColor);
-                            graphics_context_set_fill_color(ctx, wd->config->highlightForegroundColor);
+                            graphics_context_set_text_color(ctx, wd->config->highlightForegroundColor);
+                            graphics_context_set_fill_color(ctx, wd->config->highlightBackgroundColor);
+                            graphics_context_set_stroke_color(ctx, wd->config->highlightForegroundColor);
                         #endif
                     }
                     else
@@ -457,13 +457,14 @@ void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, 
                     {
                         //have to reverse background/foreground color on aplite as it seems to auto invert
                         //and basalt does not (you set the colors in "normal colors" function).
-                        #ifdef PBL_COLOR
+                        #ifdef PBL_PLATFORM_BASALT
                             graphics_context_set_text_color(ctx, wd->config->highlightForegroundColor);
                             graphics_context_set_fill_color(ctx, wd->config->highlightBackgroundColor);
                             graphics_context_set_stroke_color(ctx, wd->config->highlightForegroundColor);
                         #else
-                            graphics_context_set_text_color(ctx, wd->config->highlightBackgroundColor);
-                            graphics_context_set_fill_color(ctx, wd->config->highlightForegroundColor);
+                            graphics_context_set_text_color(ctx, wd->config->highlightForegroundColor);
+                            graphics_context_set_fill_color(ctx, wd->config->highlightBackgroundColor);
+                            graphics_context_set_stroke_color(ctx, wd->config->highlightForegroundColor);
                         #endif
                     }
                     else
@@ -481,7 +482,7 @@ void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, 
                             graphics_context_set_stroke_color(ctx, wd->config->altForegroundColor);
                         }
                     }
-                    graphics_fill_rect(ctx, cellBounds, 0, GCornerNone);
+                    //graphics_fill_rect(ctx, cellBounds, 0, GCornerNone);
                     
                     //set standard location of item box
                     cellBounds.origin.x = cellBounds.origin.x + 5;
@@ -555,11 +556,11 @@ uint16_t cell_height_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void
     
 }
 
-/*void draw_separator_callback(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context)
+void draw_separator_callback(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context)
 {
     GRect cellBounds = layer_get_bounds(cell_layer);
     graphics_draw_line(ctx, GPoint(cellBounds.origin.x + 10, cellBounds.origin.y), GPoint(cellBounds.size.w - 10, cellBounds.origin.y));
-}*/
+}
 
 //sets number of rows
 uint16_t num_rows_callback(MenuLayer *menu_layer, uint16_t section_index, void *callback_context)
@@ -663,23 +664,29 @@ void window_load(Window *window)
     #ifndef PBL_COLOR
         screenHeight = screenHeight - 16;
     #endif
-    myMenuLayer = menu_layer_create(GRect(0, 0, 144, screenHeight));
+    if (!myMenuLayer)
+    {
+        myMenuLayer = menu_layer_create(GRect(0, 0, 144, screenHeight));
+    }
     //removed this as we need a custom back button function
     //menu_layer_set_click_config_onto_window(myMenuLayer, window);
     
     //remove that ugly shadow
     scroll_layer_set_shadow_hidden(menu_layer_get_scroll_layer(myMenuLayer), 1);
     
+
     Config* config = (Config*)malloc(sizeof(Config));
     loadPersistentConfig(config);
-    
     WindowData* wd = createWindowData(config);
     window_set_user_data(window, wd);
+    wd->currentPage = 1;
     window_set_background_color(window, config->backgroundColor);
-    #ifdef PBL_COLOR
+    #ifdef PBL_SDK_3
         menu_layer_set_normal_colors(myMenuLayer, config->backgroundColor, config->foregroundColor);
     #endif
-    wd->currentPage = 1;
+    
+    
+    
     
     
     #ifdef PBL_COLOR
@@ -711,15 +718,11 @@ void window_load(Window *window)
     
     layer_add_child(window_get_root_layer(window), menu_layer_get_layer(myMenuLayer));
         
-
 }
  
 void window_unload(Window *window)
 {
-    WindowData* wd = (WindowData*)window_get_user_data(window);
     menu_layer_destroy(myMenuLayer);
-    if (wd != 0)
-        destroyProjectList(wd->projects);
 }
 
 void init()
@@ -730,7 +733,11 @@ void init()
     app_message_register_outbox_failed(outbox_failed_callback);
     app_message_register_outbox_sent(outbox_sent_callback);
     
-    app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+    #ifdef PBL_PLATFORM_APLITE
+        app_message_open(2500, 2500);
+    #else
+        app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+    #endif
     
     window = window_create();
     window_set_window_handlers(window, (WindowHandlers)
@@ -740,7 +747,6 @@ void init()
     });
 
     window_stack_push(window, true);
-    
 
 }
  

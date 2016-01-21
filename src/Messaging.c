@@ -26,6 +26,7 @@ char *translate_error(AppMessageResult result) {
 //called when receive message
 void inbox_received_callback(DictionaryIterator *iterator, void *context) 
 {
+    
     // Read first item
     Tuple *t = dict_read_first(iterator);
     
@@ -80,8 +81,10 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
                 strcpy(itemIndentationStr, t->value->cstring);
             break;
             case TIMELINE_JSON:
+                //doesn't seem to be used.. can't remember where it came from, leaving for now
                 strTimeline = (char*)calloc(t->length, sizeof(char));
                 strcpy(strTimeline, t->value->cstring);
+                free(strTimeline);
             break;
             case SELECTED_ITEM:
                 
@@ -145,6 +148,7 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
                     menu_layer_set_normal_colors(myMenuLayer, wd->config->backgroundColor, wd->config->foregroundColor);
                 #endif
                 layer_mark_dirty(menu_layer_get_layer(myMenuLayer));
+                free(configStr);
             break;
             case ADD_NEW_ITEM:
                 window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
@@ -170,7 +174,7 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
         MenuIndex mi;
         mi.row = 0;
         mi.section = 0;
-        menu_layer_set_selected_index(myMenuLayer, mi, MenuRowAlignCenter, true);
+        menu_layer_set_selected_index(myMenuLayer, mi, MenuRowAlignCenter, false);
         
         
         
@@ -187,15 +191,14 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
         }
         
         //display new version message if needed
-        #ifdef PBL_COLOR
             if (!loadMessageShown())
             {
                 displayMessage("Welcome to version 1.9! \n\nI have added timeline support for aplite in this version as well as the ability to add new items to your list by using your voice! \
 You'll notice there is now an add new button at the bottom of every one of your projects. If you click this add new button it will initiate voice-to-text and allow you to add new items to any \
-of your projects. Of course this feature will only work on pebble devices with a microphone. \n\nPlease email me with any issues: \nbradpaugh@gmail.com. \n\nPress back to return to the app.", 101);
+of your projects. Of course this feature will only work on pebble devices with a microphone. \n\nFixed many memory leaks as well, should run much more stable now. Sorry it's been so long since my \
+last update! I know many of you have been waiting patiently. \n\nPlease email me with any issues: \nbradpaugh@gmail.com. \n\nPress back to return to the app.", 101);
                 saveMessageShown();
             }
-        #endif
 
     }
     if (itemNamesStr)
@@ -203,6 +206,7 @@ of your projects. Of course this feature will only work on pebble devices with a
         ItemStruct* itemList = createEmptyItemList();
         unSerializeItemsString(itemList, itemNamesStr, itemIDsStr, itemDatesStr, itemDueDatesStr, itemIndentationStr);
         wd->items = itemList;
+        
         
         
         if (itemList->length == 0)
@@ -221,12 +225,15 @@ of your projects. Of course this feature will only work on pebble devices with a
         MenuIndex mi;
         mi.row = 0;
         mi.section = 0;
-        menu_layer_set_selected_index(myMenuLayer, mi, MenuRowAlignCenter, true);
+        menu_layer_set_selected_index(myMenuLayer, mi, MenuRowAlignCenter, false);
+        
         free(itemNamesStr);
         free(itemIDsStr);
         free(itemDatesStr);
         free(itemDueDatesStr);
         free(itemIndentationStr);
+        
+        
         //pop the loading screen (or screens) off the window stack
         while (window_stack_get_top_window() != window)
         {

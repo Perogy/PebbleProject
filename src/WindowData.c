@@ -45,4 +45,5 @@ void destroyWindowData(WindowData* wd)
     free(wd->items);
     free(wd->timelineItems);
     free(wd->config);
+    free(wd);
 }

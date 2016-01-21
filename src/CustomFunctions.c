@@ -1,6 +1,14 @@
 #include <pebble.h>
 #include <ctype.h>
 
+void* iso_realloc(void* ptr, size_t size) {
+  if (ptr != NULL) {
+    return realloc(ptr, size);
+  } else {
+    return malloc(size);
+  }
+}
+
 char* stringToLower(char* str)
 {
     char* newStr = (char*)malloc((int)strlen(str) + 1);
@@ -46,12 +54,15 @@ char** splitString(char* str, char delimiter, int* length)
         if ((str[i] == delimiter) || (i == ((int)strlen(str)-1)))
         {
             tokenCount++;
-            splitArray = (char**)realloc(splitArray, sizeof(char*)*(tokenCount));
+            //reallocating to size of a token
+            splitArray = (char**)iso_realloc(splitArray, sizeof(char*)*(tokenCount));
             splitArray[tokenCount-1] = (char*)malloc((i-previousDelimiterIndex) + 1);
             //memset(splitArray[tokenCount-1], '\0', (i-previousDelimiterIndex) + 1);
             //(i-previousDelimiterIndex) + 1
             char* derp = getSubString(str, previousDelimiterIndex, i);
-            splitArray[tokenCount-1] = strcpy(splitArray[tokenCount-1], derp);
+            //splitArray[tokenCount-1] = strcpy(splitArray[tokenCount-1], derp);
+            strcpy(splitArray[tokenCount-1], derp);
+            free(derp);
             //outputArrayContents(splitArray, tokenCount);
             previousDelimiterIndex = i+1;
         }
@@ -113,3 +124,4 @@ void loopingCopy(char* dst, char* src, int startIndex, int length)
     }
     //dst[i + 1] = '\0';
 }
+

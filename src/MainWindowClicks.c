@@ -105,7 +105,7 @@ void up_click_handler(ClickRecognizerRef recognizer, void *context)
         //this will not work when it STARTS on a scrollable text field, needs to be fixed
         scrollTextBackToStart();
         currentIndex.row--;
-        menu_layer_set_selected_index(myMenuLayer, currentIndex, MenuRowAlignCenter, true);
+        menu_layer_set_selected_index(myMenuLayer, currentIndex, MenuRowAlignCenter, false);
         WindowData* wd = window_get_user_data(window);
         wd->textScrollTimer = app_timer_register(wd->config->scrollSpeed, timerTick, NULL);
     }
@@ -121,7 +121,7 @@ void down_click_handler(ClickRecognizerRef recognizer, void *context)
         //scroll the text back to the beginning when unselecting
         scrollTextBackToStart();
         currentIndex.row++;
-        menu_layer_set_selected_index(myMenuLayer, currentIndex, MenuRowAlignCenter, true);
+        menu_layer_set_selected_index(myMenuLayer, currentIndex, MenuRowAlignCenter, false);
         WindowData* wd = window_get_user_data(window);
         wd->textScrollTimer = app_timer_register(wd->config->scrollSpeed, timerTick, NULL);
     }
@@ -140,9 +140,10 @@ void back_click_handler(ClickRecognizerRef recognizer, void *context)
         MenuIndex mi;
         mi.row = 0;
         mi.section = 0;
-        menu_layer_set_selected_index(myMenuLayer, mi, MenuRowAlignCenter, true);
+        menu_layer_set_selected_index(myMenuLayer, mi, MenuRowAlignCenter, false);
         wd->scrolledNumber = 0;
         wd->textScrollTimer = app_timer_register(wd->config->scrollSpeed, timerTick, NULL);
+        
     }
     else
     {

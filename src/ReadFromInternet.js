@@ -211,7 +211,6 @@ function getProjects(responseText)
         "PROJECT_INDENTATION": projectIndentation
     };
 
-    console.log("\nfirmware major:" + Pebble.getActiveWatchInfo().firmware.major);
     // Send to Pebble
     Pebble.sendAppMessage(dictionary,
                           function(e) 
@@ -305,7 +304,6 @@ function sendWaitingMessageAndPerformAction(code)
 {
     //when we send app message it just needs to be a 1 or 2 (config or loading) 3 = timeline loading
     var sendCode;
-    console.log("\ncode=" + code);
     if ((code == 3) || (code == 4))
         sendCode = 2;
     else if (code == 5)
@@ -344,7 +342,6 @@ function sendWaitingMessageAndPerformAction(code)
                           },
                           function(e) 
                           {
-                              console.log("Fuckballs\n\nwat");
                               console.log("Message Error:" + e.error.message);
                           });
       
@@ -427,8 +424,8 @@ function getItemsForToday()
 function pinTimelineItems()
 {
     //var url = "https://api.todoist.com/API/query?queries=" + encodeURIComponent("[\"No Due Date\"]") + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
-    //var url = "https://api.todoist.com/API/v6/sync?token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken")) + "&seq_no=" + encodeURIComponent("0") + "&seq_no_global=" + encodeURIComponent("0") + "&resource_types=" + encodeURIComponent("[\"items\"]");
-    //xhrRequest(url, 'GET', getAllItemsForTimeline);
+    var url = "https://api.todoist.com/API/v6/sync?token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken")) + "&seq_no=" + encodeURIComponent("0") + "&seq_no_global=" + encodeURIComponent("0") + "&resource_types=" + encodeURIComponent("[\"items\"]");
+    xhrRequest(url, 'GET', getAllItemsForTimeline);
 }
 
 function addNewItem(itemText, projectID)
@@ -444,7 +441,7 @@ function markItemAsCompleted(itemID)
     var url = "https://todoist.com/API/completeItems?ids=" +
     encodeURIComponent("[" + itemID + "]") + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
     var pin = {
-                "id": "pin-" + itemID
+                "id": "TodoistMiniItem-" + itemID
               };
     if (Pebble.getActiveWatchInfo().firmware.major >= 3)
     {
@@ -475,11 +472,9 @@ function markRecurringItemAsCompleted(itemID)
 Pebble.addEventListener('ready', 
     function(e) 
     {
-        console.log("\nIn Ready");
         //localStorage.removeItem("todoistMiniToken");
         if (localStorage.getItem("todoistMiniToken") === null)
         {
-            console.log("\nIn Foundddd Token");
             sendWaitingMessageAndPerformAction(1);
         }
         else
@@ -549,7 +544,8 @@ function openConfig(e)
     {
         var configData = JSON.parse(localStorage.getItem("ConfigData"));
         Pebble.openURL('https://perogy.github.io/PebbleProject/index.html#' + 'scrollSpeed=' + configData.scrollSpeed + '&backgroundColor=' + configData.backgroundColor + '&foregroundColor=' + configData.foregroundColor + '&altBackgroundColor=' + 
-                                                            configData.altBackgroundColor + '&altForegroundColor=' + configData.altForegroundColor + '&highlightBackgroundColor=' + configData.highlightBackgroundColor + '&highlightForegroundColor=' + configData.highlightForegroundColor);  
+                                                            configData.altBackgroundColor + '&altForegroundColor=' + configData.altForegroundColor + '&highlightBackgroundColor=' + configData.highlightBackgroundColor + '&highlightForegroundColor=' + configData.highlightForegroundColor);
+        
     }
 }
 
@@ -558,7 +554,6 @@ function closeConfig(e) {
     //pebble does not seem to handle encoded %2B properly (makes it a space instead of a plus sign)
     //Possibly replace spaces with plus signs... unfortunately this would screw up anything that actually had a space in it (a password for example)
     
-    console.log("response: " + e.response);
     var loginData = JSON.parse(decodeURIComponent(e.response));
     
     if (loginData.type == "configData")
@@ -637,6 +632,7 @@ function timelineRequest(pin, type, callback) {
     xhr.send(JSON.stringify(pin));
   }, function(error) { sendErrorString("Timeline Error: " + error); });
 }
+
 
 /**
  * Insert a pin into the timeline for this user.
