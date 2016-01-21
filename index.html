@@ -159,6 +159,9 @@
 		
 		<script>
 		$(document).ready(function(){
+			
+			
+			
 			$("#scrollSpeed").val(getUrlParameter('scrollSpeed'));
 			$("#BackgroundColor").val(getUrlParameter('backgroundColor'));
 			$("#ForegroundColor").val(getUrlParameter('foregroundColor'));
@@ -181,6 +184,12 @@
 					['RGB(85, 85, 255);','RGB(85, 85, 170);','RGB(170, 0, 255);','RGB(170, 85, 170);','RGB(255, 85, 255);','RGB(255, 170, 255);','RGB(170, 170, 255);','RGB(170, 85, 255);'],
 				]
 			});
+			
+			if (!getUrlParameter('scrollSpeed'))
+			{
+				defaultButtonPressed();
+				return;
+			}
 			
 			
 		});
@@ -267,7 +276,7 @@
 				<hr/>
 				
 				<div style="text-align:center">
-					If you like Todoist Time please consider donating to a poor programmer :-) Dogecoin, Bitcoin and Paypal accepted.
+					If you like Todoist Mini please consider donating to a poor programmer :-) Dogecoin, Bitcoin and Paypal accepted.
 				</div>
 			</div>
 			<div style="margin:0 auto;width:100px">
