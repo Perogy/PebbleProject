@@ -10,6 +10,13 @@ var xhrRequest = function (url, type, callback) {
   xhr.send();
 };
 
+//used for testing mostly
+var xhrRequestPost = function (url, type, data) {
+  var xhr = new XMLHttpRequest();
+  xhr.open(type, url);
+  xhr.send(data);
+};
+
 function getWatchVersion()
 {
     var platform;
@@ -133,12 +140,25 @@ function getAllItemsForTimeline(responseText)
         var json = JSON.parse(responseText);
         json = json.Items;
     
+    /*var pin;
+    pin =  {"id":"TodoistMiniItem-69102922","time":"2016-01-22T22:59:59.000Z","layout":{"type":"genericPin","title":"test","tinyIcon":"system://images/SCHEDULED_EVENT"}};
+                insertUserPin(pin, function(responseText) 
+                { 
+                    
+                });*/
     
         for(var i=0;i<json.length;i++)
         {
             if (json[i].due_date)
             {
+                
                 var date = new Date(json[i].due_date);
+                var minDate = Date.now();
+                minDate.setDate(minDate.getDate() - 3);
+                //don't want to enter in entries from a long time ago, timeline seems to reject them, get only for the last 3 days and greater
+                if (date < minDate)
+                   continue;
+                
                 //Create timeline array of items that have due dates
                 var pin = {
                 "id": "TodoistMiniItem-" + json[i].id,
@@ -150,6 +170,8 @@ function getAllItemsForTimeline(responseText)
                   }
                 };
                 
+                //xhrRequestPost('http://requestb.in/1d1bwet1', 'POST', JSON.stringify(pin));
+                //pin =  {"id":"TodoistMiniItem-69102922","time":"2016-01-11T22:59:59.000Z","layout":{"type":"genericPin","title":"test","tinyIcon":"system://images/SCHEDULED_EVENT"}};
                 insertUserPin(pin, function(responseText) 
                 { 
                     
