@@ -153,8 +153,7 @@ function getAllItemsForTimeline(responseText)
             {
                 
                 var date = new Date(json[i].due_date);
-                var minDate = Date.now();
-                minDate.setDate(minDate.getDate() - 3);
+                var minDate = Date.now() - 3;
                 //don't want to enter in entries from a long time ago, timeline seems to reject them, get only for the last 3 days and greater
                 if (date < minDate)
                    continue;

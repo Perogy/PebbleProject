@@ -193,10 +193,7 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
         //display new version message if needed
             if (!loadMessageShown())
             {
-                displayMessage("Welcome to version 1.9! \n\nI have added timeline support for aplite in this version as well as the ability to add new items to your list by using your voice! \
-You'll notice there is now an add new button at the bottom of every one of your projects. If you click this add new button it will initiate voice-to-text and allow you to add new items to any \
-of your projects. Of course this feature will only work on pebble devices with a microphone. \n\nFixed many memory leaks as well, should run much more stable now. Sorry it's been so long since my \
-last update! I know many of you have been waiting patiently. \n\nPlease email me with any issues: \nbradpaugh@gmail.com. \n\nPress back to return to the app.", 101);
+                displayMessage("Broke timeline integration briefly in the last update. Sorry! Should be back now.", 101);
                 saveMessageShown();
             }
 
