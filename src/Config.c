@@ -70,7 +70,7 @@ void loadPersistentConfig(Config* config)
 bool loadMessageShown()
 {
     //persist_delete(MESSAGE_KEY);
-    if (persist_exists(MESSAGE_KEY19)) 
+    if (persist_exists(MESSAGE_KEY112)) 
         return 1;
     else
         return 0;
@@ -78,5 +78,5 @@ bool loadMessageShown()
 //sets the startup message for a new version to shown
 void saveMessageShown()
 {
-    persist_write_bool(MESSAGE_KEY19, 1);
+    persist_write_bool(MESSAGE_KEY112, 1);
 }

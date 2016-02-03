@@ -5,6 +5,7 @@
 #define CONFIG_KEY 1
 #define MESSAGE_KEY 2
 #define MESSAGE_KEY19 19
+#define MESSAGE_KEY112 112
     
 typedef struct conf
 {

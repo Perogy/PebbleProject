@@ -87,7 +87,11 @@ void errorWindow_load(Window* window)
     }
     else
     {
-        text_layer_set_text_alignment(em->errorTextLayer, GTextAlignmentLeft);
+        #ifdef PBL_ROUND
+            text_layer_set_text_alignment(em->errorTextLayer, GTextAlignmentCenter);
+        #else
+            text_layer_set_text_alignment(em->errorTextLayer, GTextAlignmentLeft);
+        #endif
     }
     
     text_layer_set_text(em->errorTextLayer, em->message);
@@ -104,4 +108,8 @@ void errorWindow_load(Window* window)
     scroll_layer_add_child(em->errorScrollLayer, text_layer_get_layer(em->errorTextLayer));
 
     layer_add_child(window_layer, scroll_layer_get_layer(em->errorScrollLayer));
+    
+    #ifdef PBL_ROUND
+        text_layer_enable_screen_text_flow_and_paging(em->errorTextLayer, 2);
+    #endif
 }

@@ -129,8 +129,15 @@ void draw_header_callback(GContext *ctx, Layer *cell_layer, uint16_t section_ind
         WindowData* wd = (WindowData*)window_get_user_data(window);
         GRect cellBounds = layer_get_bounds(cell_layer);
         graphics_context_set_text_color(ctx, wd->config->altForegroundColor);
-        cellBounds.origin.x = cellBounds.origin.x + 8;
-        graphics_draw_text(ctx, "Projects", fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+        
+        #ifdef PBL_ROUND
+            cellBounds.origin.x = cellBounds.origin.x + 12;
+            cellBounds.size.w = cellBounds.size.w - 24;
+            graphics_draw_text(ctx, "Projects", fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+        #else
+            cellBounds.origin.x = cellBounds.origin.x + 8;
+            graphics_draw_text(ctx, "Projects", fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+        #endif
         graphics_context_set_stroke_color(ctx, wd->config->altForegroundColor);
         //graphics_draw_line(ctx,GPoint(cellBounds.origin.x,cellBounds.origin.y+cellBounds.size.h-1), GPoint(cellBounds.origin.x+cellBounds.size.w, cellBounds.origin.y+cellBounds.size.h-1));
     }
@@ -139,8 +146,15 @@ void draw_header_callback(GContext *ctx, Layer *cell_layer, uint16_t section_ind
         WindowData* wd = (WindowData*)window_get_user_data(window);
         GRect cellBounds = layer_get_bounds(cell_layer);
         graphics_context_set_text_color(ctx, wd->config->altForegroundColor);
-        cellBounds.origin.x = cellBounds.origin.x + 8;
-        graphics_draw_text(ctx, wd->projects->projects[wd->selectedProjectIndex], fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+        
+        #ifdef PBL_ROUND
+            cellBounds.origin.x = cellBounds.origin.x + 12;
+            cellBounds.size.w = cellBounds.size.w - 24;
+            graphics_draw_text(ctx, wd->projects->projects[wd->selectedProjectIndex], fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+        #else
+            cellBounds.origin.x = cellBounds.origin.x + 8;
+            graphics_draw_text(ctx, wd->projects->projects[wd->selectedProjectIndex], fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+        #endif
         graphics_context_set_stroke_color(ctx, wd->config->altForegroundColor);
         //graphics_draw_line(ctx,GPoint(cellBounds.origin.x,cellBounds.origin.y+cellBounds.size.h-1), GPoint(cellBounds.origin.x+cellBounds.size.w, cellBounds.origin.y+cellBounds.size.h-1));
     }
@@ -155,7 +169,197 @@ static uint16_t menu_get_num_sections_callback(MenuLayer *menu_layer, void *data
   return 1;
 }
 
+void draw_row_callback_round(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, void *callback_context)
+{
+    WindowData* wd = (WindowData*)window_get_user_data(window);
+    #ifdef PBL_COLOR
+        menu_layer_set_normal_colors(myMenuLayer, wd->config->altBackgroundColor, wd->config->altForegroundColor);
+    #endif
+        
+    if (!wd)
+        return;
+	
+    if (wd->currentPage == 1)
+    {
+        if (wd->projects)
+        {
+            for(int i=0;i<(wd->projects->length);i++)
+            {
+                //remember this is the row it is CURRENTLY drawing not the SELECTED row, it will draw all rows on an update by calling the function a bunch of different times
+                if (cell_index->row == i)
+                {
+                    GRect cellBounds = layer_get_bounds(cell_layer);
+                    
+                    MenuIndex currentIndex = menu_layer_get_selected_index(myMenuLayer);
+                    int currentRow = currentIndex.row;
+                    
+                    
+                    //set background color (alt color)
+                    #ifdef PBL_COLOR
+                        graphics_context_set_text_color(ctx, wd->config->altForegroundColor);
+                        graphics_context_set_fill_color(ctx, wd->config->altBackgroundColor);
+                        graphics_context_set_stroke_color(ctx, wd->config->altForegroundColor);
+                    #endif
+                    
+                    //fill background
+                    graphics_fill_rect(ctx, cellBounds, 0, GCornerNone);
+                    
+                    //set standard location of item box
+                    cellBounds.origin.x = cellBounds.origin.x + 12;
+                    cellBounds.size.w = cellBounds.size.w - 24;
+                    
+                    cellBounds.origin.y = cellBounds.origin.y + 3;
+                    cellBounds.size.h = cellBounds.size.h - 6;
+                    
+                    //indent item box if needed
+                    cellBounds.origin.x = cellBounds.origin.x + ((atoi(wd->projects->indentation[i])-1) * 7);
+                    cellBounds.size.w = cellBounds.size.w - ((atoi(wd->projects->indentation[i])-1) * 7);
+                    
+                    
+                    if (cell_index->row == currentRow)
+                    {
+                        //have to reverse background/foreground color on aplite as it seems to auto invert
+                        //and basalt does not (you set the colors in "normal colors" function).
+                        #ifdef PBL_COLOR
+                            graphics_context_set_text_color(ctx, wd->config->highlightForegroundColor);
+                            graphics_context_set_fill_color(ctx, wd->config->highlightBackgroundColor);
+                            graphics_context_set_stroke_color(ctx, wd->config->highlightForegroundColor);
+                        #endif
+                    }
+                    else
+                    {
+                        #ifdef PBL_COLOR
+                            graphics_context_set_text_color(ctx, wd->config->foregroundColor);
+                            graphics_context_set_fill_color(ctx, wd->config->backgroundColor);
+                            graphics_context_set_stroke_color(ctx, wd->config->foregroundColor);
+                        #endif
+                    }
+                    //fill rounded rect (Item space)
+                    graphics_fill_rect(ctx, cellBounds, 8, GCornersAll);
+                    //graphics_draw_round_rect(ctx, cellBounds, 5);
+                    
+                    
+                    //if selected
+                    if (cell_index->row == currentRow)
+                    {
+                        //increase cellbounds size so we can tell if the text will "overflow". if you dont do this the content size will stop at the end of the bounds
+                        cellBounds.size.w = cellBounds.size.w*2.0;
+                        GSize textSize = graphics_text_layout_get_content_size(wd->projects->projects[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter);
+                        cellBounds.size.w = cellBounds.size.w/2.0;
+                        //snprintf(asdf, 100, "%d", textSize.w);
+                        //displayErrorMessage(asdf);
+                        if (textSize.w > cellBounds.size.w)
+                        {
+                            wd->currentScrollable = 1;
+                        }
+                        else
+                        {
+                            wd->currentScrollable = 0; 
+                        }
+                    }
+                    cellBounds.origin.x = cellBounds.origin.x + 3;
+                    graphics_draw_text(ctx, wd->projects->projects[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                }
+            }
+        }
+    }
+    
+    if (wd->currentPage == 2)
+    {
+        if (wd->items && (wd->items->length != 0))
+        {
+            for(int i=0;i<(wd->items->length);i++)
+            {
+                if (cell_index->row == i)
+                {
+                    GRect cellBounds = layer_get_bounds(cell_layer);
+                    
+                    //text takes up 80% of the layer size due to the checkboxes
+                    
+                    //GRect newBounds = GRect(cellBounds.origin.x, cellBounds.origin.y, cellBounds.size.w*.80, cellBounds.size.h);
+                    //layer_set_bounds(cell_layer, newBounds);
+                    
+                    MenuIndex currentIndex = menu_layer_get_selected_index(myMenuLayer);
+                    int currentRow = currentIndex.row;
+                    
+                    //set background color (alt color)
+                    #ifdef PBL_COLOR
+                        graphics_context_set_text_color(ctx, wd->config->altForegroundColor);
+                        graphics_context_set_fill_color(ctx, wd->config->altBackgroundColor);
+                        graphics_context_set_stroke_color(ctx, wd->config->altForegroundColor);
+                    #endif
+                    
+                    //fill background
+                    graphics_fill_rect(ctx, cellBounds, 0, GCornerNone);
+                    
+                    //set standard location of item box
+                    cellBounds.origin.x = cellBounds.origin.x + 12;
+                    cellBounds.size.w = cellBounds.size.w - 24;
+                    cellBounds.origin.y = cellBounds.origin.y + 3;
+                    cellBounds.size.h = cellBounds.size.h - 6;
+                    
+                    //indent item box if needed
+                    cellBounds.origin.x = cellBounds.origin.x + ((atoi(wd->items->indentation[i])-1) * 7);
+                    cellBounds.size.w = cellBounds.size.w - ((atoi(wd->items->indentation[i])-1) * 7);
+                    
+                    GRect textBounds = GRect(cellBounds.origin.x, cellBounds.origin.y, cellBounds.size.w*.80, 30);
+                    
+                    
+                    if (cell_index->row == currentRow)
+                    {
+                        //have to reverse background/foreground color on aplite as it seems to auto invert
+                        //and basalt does not (you set the colors in "normal colors" function).
+                        #ifdef PBL_COLOR
+                            graphics_context_set_text_color(ctx, wd->config->highlightForegroundColor);
+                            graphics_context_set_fill_color(ctx, wd->config->highlightBackgroundColor);
+                            graphics_context_set_stroke_color(ctx, wd->config->highlightForegroundColor);
+                        #endif
+                    }
+                    else
+                    {
+                        #ifdef PBL_COLOR
+                            graphics_context_set_text_color(ctx, wd->config->foregroundColor);
+                            graphics_context_set_fill_color(ctx, wd->config->backgroundColor);
+                            graphics_context_set_stroke_color(ctx, wd->config->foregroundColor);
+                        #endif
+                    }
+                    //fill rounded rect (Item space)
+                    graphics_fill_rect(ctx, cellBounds, 8, GCornersAll);
 
+                    //if selected
+                    if (cell_index->row == currentRow)
+                    {
+                        GSize textSize = graphics_text_layout_get_content_size(wd->items->items[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(cellBounds.origin.x, cellBounds.origin.y, cellBounds.size.w*2, 30), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
+                        //snprintf(asdf, 100, "%d", textSize.w);
+                        //displayErrorMessage(asdf);
+                        if (textSize.w >= (textBounds.size.w))
+                        {
+                            wd->currentScrollable = 1;
+                        }
+                        else
+                        {
+                            wd->currentScrollable = 0; 
+                        }
+                    }
+                    textBounds.origin.x = textBounds.origin.x + 3;
+                    
+                    graphics_draw_text(ctx, wd->items->items[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), textBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                    
+                    //if it has a date draw the date
+                    if (strcmp(wd->items->itemDates[cell_index->row], "") != 0)
+                    {
+                        textBounds.origin.y = textBounds.origin.y+20;
+                        //draw a seperator line if there is a date
+                        //graphics_draw_line(ctx, GPoint(textBounds.origin.x-3, textBounds.origin.y+2), GPoint(textBounds.size.w, textBounds.origin.y+2));
+                        graphics_draw_text(ctx, wd->items->itemDueDates[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), textBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                    }
+                    drawCheckbox(ctx, cell_layer, i);
+                    //checkCheckbox(ctx, cell_layer, i);
+                }
+            }
+        }
+    }
+}
 
 void draw_row_callback_modern(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, void *callback_context)
 {
@@ -666,7 +870,11 @@ void window_load(Window *window)
     #endif
     if (!myMenuLayer)
     {
-        myMenuLayer = menu_layer_create(GRect(0, 0, 144, screenHeight));
+        #ifdef PBL_ROUND
+            myMenuLayer = menu_layer_create(GRect(0, 0, 180, 180));
+        #else
+            myMenuLayer = menu_layer_create(GRect(0, 0, 144, screenHeight));
+        #endif
     }
     //removed this as we need a custom back button function
     //menu_layer_set_click_config_onto_window(myMenuLayer, window);
@@ -688,8 +896,18 @@ void window_load(Window *window)
     
     
     
-    
-    #ifdef PBL_COLOR
+    #ifdef PBL_PLATFORM_CHALK
+        MenuLayerCallbacks callbacks = 
+        {
+            .draw_row = (MenuLayerDrawRowCallback) draw_row_callback_round,
+            .draw_header = (MenuLayerDrawHeaderCallback) draw_header_callback,
+            .get_num_sections = (MenuLayerGetNumberOfSectionsCallback)menu_get_num_sections_callback,
+            .get_num_rows = (MenuLayerGetNumberOfRowsInSectionsCallback) num_rows_callback,
+            .get_cell_height = (MenuLayerGetCellHeightCallback) cell_height_callback,
+            .get_header_height = (MenuLayerGetHeaderHeightCallback) menu_get_header_height_callback
+        };
+        menu_layer_set_callbacks(myMenuLayer, NULL, callbacks);
+    #elif PBL_PLATFORM_BASALT
         MenuLayerCallbacks callbacks = 
         {
             .draw_row = (MenuLayerDrawRowCallback) draw_row_callback_modern,

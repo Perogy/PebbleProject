@@ -193,7 +193,7 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
         //display new version message if needed
             if (!loadMessageShown())
             {
-                displayMessage("Broke timeline integration briefly in the last update. Sorry! Should be back now.", 101);
+                displayMessage("Notice: Version 1.12 now has support for Pebble Time Round!", 101);
                 saveMessageShown();
             }
 
