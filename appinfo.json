@@ -23,6 +23,7 @@
         "configurable"
     ],
     "companyName": "bradpaugh@gmail.com",
+    "enableMultiJS": false,
     "longName": "Todoist Mini",
     "projectType": "native",
     "resources": {
@@ -43,7 +44,7 @@
         "chalk"
     ],
     "uuid": "156ab4ed-c65c-4dca-ab42-af435f784aa1",
-    "versionLabel": "1.12",
+    "versionLabel": "1.13",
     "watchapp": {
         "watchface": false
     }
