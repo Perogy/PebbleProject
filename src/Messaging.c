@@ -193,7 +193,7 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
         //display new version message if needed
             if (!loadMessageShown())
             {
-                displayMessage("Version 1.13 - Fixed a bug where the app would give an error message when writing the timeline if you had items over a year in the future.", 101);
+                displayMessage("Version 1.14 - Fixed a bug where add new was not showing up on Pebble Time Round", 101);
                 saveMessageShown();
             }
 

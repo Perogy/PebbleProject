@@ -98,8 +98,8 @@ function getItems(responseText)
             }
         }
     
-        //only put "Add New" if we are on basalt
-        if (getWatchVersion() == "basalt")
+        //only put "Add New" if we are on basalt or chalk
+        if (getWatchVersion() == "basalt" || getWatchVersion() == "chalk")
         {
             //cannot add items to "Today" project so we only add the "Add New" button if it's not a today project
             if (!isToday)
