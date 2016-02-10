@@ -146,14 +146,19 @@ function getAllItemsForTimeline(responseText)
             {
                 
                 var date = new Date(json[i].due_date);
-                var minDate = Date.now() - 2;
-                var maxDate = Date.now() + 364;
+                var minDate = new Date();
+                //min date is two days ago. Have to use this weird calculation because javascript is stupid
+                minDate.setTime( minDate.getTime() - 2 * 86400000 );
+                var maxDate = new Date();
+                //max date is 1 year from now.
+                maxDate.setTime( maxDate.getTime() + 364 * 86400000 );
                 //don't want to enter in entries from a long time ago, or too far in the future. Timeline will reject anything outside the range of 2 days
                 //in the past and 1 year in the future
                 if (date < minDate)
                     continue;
                 if (date > maxDate)
                     continue;
+                
                 
                 //Create timeline array of items that have due dates
                 var pin = {
