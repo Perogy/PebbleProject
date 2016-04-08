@@ -129,6 +129,7 @@
 		var altForegroundColorJ = $("#AltForegroundColor").spectrum("get");
 		var highlightBackgroundColorJ = $("#HighlightBackgroundColor").spectrum("get");
 		var highlightForegroundColorJ = $("#HighlightForegroundColor").spectrum("get");
+		var timelineEnabledJ = $("#timelineEnabled").prop("checked");
 		var loginData = {scrollSpeed:document.getElementById('scrollSpeed').value,
 						 backgroundColor:backgroundColorJ.toHex(),
 						foregroundColor:foregroundColorJ.toHex(),
@@ -136,6 +137,7 @@
 						altForegroundColor:altForegroundColorJ.toHex(),
 						highlightBackgroundColor:highlightBackgroundColorJ.toHex(),
 						highlightForegroundColor:highlightForegroundColorJ.toHex(),
+						timelineEnabled:timelineEnabledJ,
 						type:'configData'};
 		var return_to = getQueryParam('return_to', 'pebblejs://close#');
 		location.href = return_to + encodeURIComponent(JSON.stringify(loginData));
@@ -149,6 +151,7 @@
 		$("#AltForegroundColor").spectrum("set", '#FFFFFF');
 		$("#HighlightBackgroundColor").spectrum("set", '#FF0000');
 		$("#HighlightForegroundColor").spectrum("set", '#FFFFFF');
+		$("#timelineEnabled").prop("checked", true);
 	}
 	
 
@@ -169,6 +172,15 @@
 			$("#AltForegroundColor").val(getUrlParameter('altForegroundColor'));
 			$("#HighlightBackgroundColor").val(getUrlParameter('highlightBackgroundColor'));
 			$("#HighlightForegroundColor").val(getUrlParameter('highlightForegroundColor'));
+			
+			if (getUrlParameter('timelineEnabled') == "true")
+			{
+				$("#timelineEnabled").prop("checked", true);
+			}
+			else
+			{
+				$("#timelineEnabled").prop("checked", false);
+			}
 			
 			$(".ColorSelect").spectrum({
 				showPaletteOnly: true,
@@ -259,6 +271,10 @@
 
 				<div class="blockBottom">
 					<label>Highlight Foreground Color: </label><input type='text' class="ColorSelect" id="HighlightForegroundColor" />
+				</div>
+				
+				<div class="blockBottom">
+					<label style="width:200px">Timeline Enabled: </label><input type="checkbox" id="timelineEnabled" style="height:15px;width:15px;position:relative;left:5px;top:2px" />
 				</div>
 				
 				<div style="margin=0 auto;width:255px; padding-bottom:20px;padding-top:20px" onclick="defaultButtonPressed()">
