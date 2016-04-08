@@ -91,7 +91,7 @@
 	function loginTodoist() {
 		var loginData = {email:document.getElementById('todoistEmail').value, password:document.getElementById('todoistPassword').value, googleToken:false};
 		var return_to = getQueryParam('return_to', 'pebblejs://close#');
-		location.href = return_to + loginData;
+		location.href = return_to + encodeURIComponent(JSON.stringify(loginData));
 	}
 	
 	function getQueryParam(variable, defaultValue) {
@@ -129,6 +129,7 @@
 		var altForegroundColorJ = $("#AltForegroundColor").spectrum("get");
 		var highlightBackgroundColorJ = $("#HighlightBackgroundColor").spectrum("get");
 		var highlightForegroundColorJ = $("#HighlightForegroundColor").spectrum("get");
+		var timelineEnabledJ = $("#timelineEnabled").prop("checked");
 		var loginData = {scrollSpeed:document.getElementById('scrollSpeed').value,
 						 backgroundColor:backgroundColorJ.toHex(),
 						foregroundColor:foregroundColorJ.toHex(),
@@ -136,8 +137,10 @@
 						altForegroundColor:altForegroundColorJ.toHex(),
 						highlightBackgroundColor:highlightBackgroundColorJ.toHex(),
 						highlightForegroundColor:highlightForegroundColorJ.toHex(),
+						timelineEnabled:timelineEnabledJ,
 						type:'configData'};
-		location.href = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(loginData));
+		var return_to = getQueryParam('return_to', 'pebblejs://close#');
+		location.href = return_to + encodeURIComponent(JSON.stringify(loginData));
 	}
 	
 	function defaultButtonPressed() {
@@ -148,6 +151,7 @@
 		$("#AltForegroundColor").spectrum("set", '#FFFFFF');
 		$("#HighlightBackgroundColor").spectrum("set", '#FF0000');
 		$("#HighlightForegroundColor").spectrum("set", '#FFFFFF');
+		$("#timelineEnabled").prop("checked", true);
 	}
 	
 
@@ -158,6 +162,9 @@
 		
 		<script>
 		$(document).ready(function(){
+			
+			
+			
 			$("#scrollSpeed").val(getUrlParameter('scrollSpeed'));
 			$("#BackgroundColor").val(getUrlParameter('backgroundColor'));
 			$("#ForegroundColor").val(getUrlParameter('foregroundColor'));
@@ -180,6 +187,12 @@
 					['RGB(85, 85, 255);','RGB(85, 85, 170);','RGB(170, 0, 255);','RGB(170, 85, 170);','RGB(255, 85, 255);','RGB(255, 170, 255);','RGB(170, 170, 255);','RGB(170, 85, 255);'],
 				]
 			});
+			
+			if (!getUrlParameter('scrollSpeed'))
+			{
+				defaultButtonPressed();
+				return;
+			}
 			
 			
 		});
@@ -251,6 +264,10 @@
 					<label>Highlight Foreground Color: </label><input type='text' class="ColorSelect" id="HighlightForegroundColor" />
 				</div>
 				
+				<div class="blockBottom">
+					<label style="width:200px">Timeline Enabled: </label><input type="checkbox" id="timelineEnabled" style="height:15px;width:15px;position:relative;left:5px;top:2px" />
+				</div>
+				
 				<div style="margin=0 auto;width:255px; padding-bottom:20px;padding-top:20px" onclick="defaultButtonPressed()">
 					<button type="button" onClick='defaultButtonPressed();' id="DefaultSettings" style="width: 255px; height:30px">
 						Reset to Defaults
@@ -266,7 +283,7 @@
 				<hr/>
 				
 				<div style="text-align:center">
-					If you like Todoist Time please consider donating to a poor programmer :-) Dogecoin, Bitcoin and Paypal accepted.
+					If you like Todoist Mini please consider donating to a poor programmer :-) Dogecoin, Bitcoin and Paypal accepted.
 				</div>
 			</div>
 			<div style="margin:0 auto;width:100px">
