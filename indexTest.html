@@ -174,10 +174,14 @@
 			$("#HighlightForegroundColor").val(getUrlParameter('highlightForegroundColor'));
 			alert(getUrlParameter('timelineEnabled'));
 			if (getUrlParameter('timelineEnabled') == "true")
+			{
 				alert("in true");
 				$("#timelineEnabled").prop("checked", true);
+			}
 			else
+			{
 				$("#timelineEnabled").prop("checked", false);
+			}
 			
 			$(".ColorSelect").spectrum({
 				showPaletteOnly: true,
