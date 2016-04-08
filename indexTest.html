@@ -172,7 +172,11 @@
 			$("#AltForegroundColor").val(getUrlParameter('altForegroundColor'));
 			$("#HighlightBackgroundColor").val(getUrlParameter('highlightBackgroundColor'));
 			$("#HighlightForegroundColor").val(getUrlParameter('highlightForegroundColor'));
-			$("#timelineEnabled").prop("checked", getUrlParameter('timelineEnabled'));
+			
+			if (getUrlParameter('timelineEnabled') == "true")
+				$("#timelineEnabled").prop("checked", true);
+			else
+				$("#timelineEnabled").prop("checked", false);
 			
 			$(".ColorSelect").spectrum({
 				showPaletteOnly: true,
