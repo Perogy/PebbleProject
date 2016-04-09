@@ -13,7 +13,7 @@
 //an error happened in javascript
 #define ERROR 7
 #define CONFIG 8
-#define TIMELINE_JSON 9
+#define TIMELINE_COMPLETE 9
 #define ERRORMSG 10
 #define ITEM_DATES 11
 #define SELECTED_ITEM_RECURRING 12

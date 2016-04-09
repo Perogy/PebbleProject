@@ -80,11 +80,12 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
                 itemIndentationStr = (char*)calloc(t->length, sizeof(char));
                 strcpy(itemIndentationStr, t->value->cstring);
             break;
-            case TIMELINE_JSON:
-                //doesn't seem to be used.. can't remember where it came from, leaving for now
-                strTimeline = (char*)calloc(t->length, sizeof(char));
-                strcpy(strTimeline, t->value->cstring);
-                free(strTimeline);
+            case TIMELINE_COMPLETE:
+                //pop the timeline loading windows off the stack because loading is complete
+                while (window_stack_get_top_window() != window)
+                {
+                    window_stack_pop(1);
+                }
             break;
             case SELECTED_ITEM:
                 
@@ -111,7 +112,7 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
                 {
                     displayMessage("Loading Projects...", 102);
                 }
-                if (t->value->int32 == 2)
+                if (t->value->int32 == 3)
                 {
                     displayMessage("Writing Items to Timeline...", 102);
                 }
@@ -193,7 +194,7 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
         //display new version message if needed
             if (!loadMessageShown())
             {
-                displayMessage("Version 1.15 - Fixed an issue with timeline dates", 101);
+                displayMessage("Version 1.16 - You now have the ability to enable or disable the timeline from the config screen.", 101);
                 saveMessageShown();
             }
 

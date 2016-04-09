@@ -29,6 +29,14 @@ function getWatchVersion()
     return platform;
 }
 
+function isTimelineEnabled()
+{
+    if (localStorage.getItem("timelineEnabled") == "true")
+        return true;
+    else
+        return false;
+}
+
 //if integer is 0 return a string 00. Used for times
 function leadingZeroCheck(number)
 {
@@ -36,6 +44,20 @@ function leadingZeroCheck(number)
         return "0" + number;
     else
         return number;
+}
+
+function removeOutlookGarbage(str)
+{
+    if (str.startsWith("[[outlook=id"))
+    {
+        var contentStart = str.indexOf(",") + 2;
+        var contentEnd = str.indexOf("]]");
+        return str.substring(contentStart, contentEnd);
+    }
+    else
+    {
+        return str;
+    }
 }
 
 function getItems(responseText)
@@ -76,6 +98,10 @@ function getItems(responseText)
     
         for(var i=0;i<json.length;i++)
         {
+            //items added via outlook have an ID tag in their content and some really weird syntax. The below is to fix this and show it as a normal item
+            json[i].content = removeOutlookGarbage(json[i].content);
+            
+            
             itemNames = itemNames + json[i].content.replace("|", "") + " |";
             itemIDs = itemIDs  + json[i].id + "|";
             if (json[i].date_string == "null")
@@ -140,6 +166,17 @@ function getAllItemsForTimeline(responseText)
         var json = JSON.parse(responseText);
         json = json.Items;
     
+    //some testing code
+    /*var json = [];
+    for(var z=0;z<json.length;z++)
+    {
+            console.log("item " + z + "\n");
+            insertUserPin(json[z], function(responseText) 
+            { 
+                    
+            });
+    }*/
+    
         for(var i=0;i<json.length;i++)
         {
             if (json[i].due_date)
@@ -159,6 +196,14 @@ function getAllItemsForTimeline(responseText)
                 if (date > maxDate)
                     continue;
                 
+                //items added via outlook have an ID tag in their content and some really weird syntax. The below is to fix this and show it as a normal item
+                json[i].content = removeOutlookGarbage(json[i].content);
+                //truncate string if its longer than 256 characters as this is not allowed in timeline
+                if(json[i].content.length > 256)
+                {
+                    json[i].content = json[i].content.substring(0, 255);
+                }
+                
                 
                 //Create timeline array of items that have due dates
                 var pin = {
@@ -174,14 +219,31 @@ function getAllItemsForTimeline(responseText)
                 //TEMP make sure to comment out in live versions
                 //xhrRequestPost('http://ec2-52-24-236-147.us-west-2.compute.amazonaws.com/index.html', 'POST', JSON.stringify(pin));
                 
+                
                 //test pin keep commented other than for testing
                 //pin =  {"id":"TodoistMiniItem-21903246","time":"2017-03-01T22:59:59.000Z","layout":{"type":"genericPin","title":"Termin Confort d'eau - Wartung Boiler 20.3.","tinyIcon":"system://images/SCHEDULED_EVENT"}};
+                //console.log("writing timeline" + JSON.stringify(pin));
                 insertUserPin(pin, function(responseText) 
                 { 
                     
                 });
             }
-        } 
+        }
+    
+    //send message to watch to tell it that loading is complete
+    var dictionary = 
+        {
+            "TIMELINE_COMPLETE": "0"
+        };
+        Pebble.sendAppMessage(dictionary,
+                          function(e) 
+                          {
+                              
+                          },
+                          function(e) 
+                          {
+                              console.log("Message Error:" + e.error.message);
+                          });   
 }
 
 function getToken(responseText) 
@@ -241,8 +303,7 @@ function getProjects(responseText)
     Pebble.sendAppMessage(dictionary,
                           function(e) 
                           {
-                              //this should really show a loading message that says pinning timeline items
-                              if (Pebble.getActiveWatchInfo().firmware.major >= 3)
+                              if ((Pebble.getActiveWatchInfo().firmware.major >= 3) && isTimelineEnabled())
                                   sendWaitingMessageAndPerformAction(5);
                           },
                           function(e) 
@@ -469,7 +530,7 @@ function markItemAsCompleted(itemID)
     var pin = {
                 "id": "TodoistMiniItem-" + itemID
               };
-    if (Pebble.getActiveWatchInfo().firmware.major >= 3)
+    if ((Pebble.getActiveWatchInfo().firmware.major >= 3) && isTimelineEnabled())
     {
         //delete pin from timeline if completed
         deleteUserPin(pin, function(responseText) 
@@ -486,7 +547,7 @@ function markRecurringItemAsCompleted(itemID)
     var url = "https://todoist.com/API/updateRecurringDate?ids=" +
     encodeURIComponent("[" + itemID + "]") + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
     xhrRequest(url, 'GET', markRecurringItem);
-    if (Pebble.getActiveWatchInfo().firmware.major >= 3)
+    if ((Pebble.getActiveWatchInfo().firmware.major >= 3) && isTimelineEnabled())
     {
         //update timeline pins if recurring item completed
         pinTimelineItems();
@@ -498,6 +559,9 @@ function markRecurringItemAsCompleted(itemID)
 Pebble.addEventListener('ready', 
     function(e) 
     {
+        //enables timeline by default if it has never been set.
+        if (localStorage.getItem("timelineEnabled") === null)
+            localStorage.setItem("timelineEnabled", "true");
         //localStorage.removeItem("todoistMiniToken");
         if (localStorage.getItem("todoistMiniToken") === null)
         {
@@ -540,9 +604,8 @@ Pebble.addEventListener('appmessage',
 function setConfig(loginData)
 {
     localStorage.setItem("ConfigData", JSON.stringify(loginData));
-    var configString = loginData.scrollSpeed + '|' + loginData.backgroundColor + '|' + loginData.foregroundColor + '|' + loginData.altBackgroundColor + '|' + loginData.altForegroundColor + '|' + loginData.highlightBackgroundColor + '|' + loginData.highlightForegroundColor + '|';
-    
-
+    var configString = loginData.scrollSpeed + '|' + loginData.backgroundColor + '|' + loginData.foregroundColor + '|' + loginData.altBackgroundColor + '|' + loginData.altForegroundColor + '|' + loginData.highlightBackgroundColor + '|' + loginData.highlightForegroundColor + '|' + loginData.timelineEnabled + '|';
+    localStorage.setItem("timelineEnabled", loginData.timelineEnabled);
     var dictionary = 
     {
         "CONFIG": configString
@@ -570,7 +633,7 @@ function openConfig(e)
     {
         var configData = JSON.parse(localStorage.getItem("ConfigData"));
         Pebble.openURL('https://perogy.github.io/PebbleProject/index.html#' + 'scrollSpeed=' + configData.scrollSpeed + '&backgroundColor=' + configData.backgroundColor + '&foregroundColor=' + configData.foregroundColor + '&altBackgroundColor=' + 
-                                                            configData.altBackgroundColor + '&altForegroundColor=' + configData.altForegroundColor + '&highlightBackgroundColor=' + configData.highlightBackgroundColor + '&highlightForegroundColor=' + configData.highlightForegroundColor);
+                                                            configData.altBackgroundColor + '&altForegroundColor=' + configData.altForegroundColor + '&highlightBackgroundColor=' + configData.highlightBackgroundColor + '&highlightForegroundColor=' + configData.highlightForegroundColor + '&timelineEnabled=' + configData.timelineEnabled);
         
     }
 }
@@ -643,7 +706,7 @@ function timelineRequest(pin, type, callback) {
     }
     else
     {
-         sendErrorString("Timeline Error:Status " + this.status);     
+         sendErrorString("Timeline Error:Status " + this.status + " " + this.responseText);     
     }    
   };
   xhr.open(type, url);

@@ -17,6 +17,7 @@ typedef struct conf
     GColor altForegroundColor;
     GColor highlightBackgroundColor;
     GColor highlightForegroundColor;
+    bool timelineEnabled;
 } Config;
 
 void initDefaults(Config* config);

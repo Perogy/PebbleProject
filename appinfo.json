@@ -15,7 +15,7 @@
         "SELECTED_ITEM": 5,
         "SELECTED_ITEM_RECURRING": 12,
         "SELECTED_PROJECT": 2,
-        "TIMELINE_JSON": 9,
+        "TIMELINE_COMPLETE": 9,
         "WAITING": 6
     },
     "capabilities": [
@@ -44,7 +44,7 @@
         "chalk"
     ],
     "uuid": "156ab4ed-c65c-4dca-ab42-af435f784aa1",
-    "versionLabel": "1.15",
+    "versionLabel": "1.17",
     "watchapp": {
         "watchface": false
     }
