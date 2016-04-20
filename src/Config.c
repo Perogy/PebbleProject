@@ -49,10 +49,10 @@ void setConfig(char* configString, Config* config)
         config->highlightForegroundColor = GColorWhite;
     #endif
     
-    if (strcmp(configArray[7], "true") == 0)
-        config->timelineEnabled = 1;
-    else
+    if (strcmp(configArray[7], "false") == 0)
         config->timelineEnabled = 0;
+    else
+        config->timelineEnabled = 1;
 }
 
 void savePersistentConfig(Config* config)

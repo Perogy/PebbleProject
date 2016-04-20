@@ -10,13 +10,6 @@ var xhrRequest = function (url, type, callback) {
   xhr.send();
 };
 
-//used for testing mostly
-var xhrRequestPost = function (url, type, data) {
-  var xhr = new XMLHttpRequest();
-  xhr.open(type, url);
-  xhr.send(data);
-};
-
 function getWatchVersion()
 {
     var platform;
@@ -48,7 +41,7 @@ function leadingZeroCheck(number)
 
 function removeOutlookGarbage(str)
 {
-    if (str.startsWith("[[outlook=id"))
+    if (startsWith(str,"[[outlook=id"))
     {
         var contentStart = str.indexOf(",") + 2;
         var contentEnd = str.indexOf("]]");
@@ -59,6 +52,20 @@ function removeOutlookGarbage(str)
         return str;
     }
 }
+
+//defining my own startsWith as the built in one does not seem to work
+//str = string to search
+//strMatch = string to match
+function startsWith(str, strMatch)
+{
+    for(var i = 0; i < str.length; i++)
+    {
+        if (str.substring(0, i) == strMatch)
+            return true;
+    }
+    return false;
+}
+
 
 function getItems(responseText)
 {
@@ -156,12 +163,14 @@ function getItems(responseText)
                               },
                               function(e) 
                               {
-                                  console.log("Message Error:" + e.error.message);
+                                  sendErrorString(e.error.message);
                               });  
 }
 
 function getAllItemsForTimeline(responseText)
 {
+    try
+    {
     // responseText contains a JSON object with item info
         var json = JSON.parse(responseText);
         json = json.Items;
@@ -217,8 +226,7 @@ function getAllItemsForTimeline(responseText)
                 };
                 
                 //TEMP make sure to comment out in live versions
-                //xhrRequestPost('http://ec2-52-24-236-147.us-west-2.compute.amazonaws.com/index.html', 'POST', JSON.stringify(pin));
-                
+                //xhrRequestPost('http://www.bradpaugh.com/index.html', 'POST', JSON.stringify(pin));
                 
                 //test pin keep commented other than for testing
                 //pin =  {"id":"TodoistMiniItem-21903246","time":"2017-03-01T22:59:59.000Z","layout":{"type":"genericPin","title":"Termin Confort d'eau - Wartung Boiler 20.3.","tinyIcon":"system://images/SCHEDULED_EVENT"}};
@@ -242,8 +250,13 @@ function getAllItemsForTimeline(responseText)
                           },
                           function(e) 
                           {
-                              console.log("Message Error:" + e.error.message);
+                              sendErrorString(e.error.message);
                           });   
+    }
+    catch (err)
+    {
+        sendErrorString(err.message);
+    }
 }
 
 function getToken(responseText) 
@@ -264,52 +277,60 @@ function getToken(responseText)
 
 function getProjects(responseText)
 {
-    // responseText contains a JSON object with project data
-    var json = JSON.parse(responseText);
-
-    if (json[0])
+    try
     {
-        if (!json[0].hasOwnProperty("id"))
+        // responseText contains a JSON object with project data
+        var json = JSON.parse(responseText);
+    
+        if (json[0])
         {
-            sendErrorMessage(2);
-            return;
+            if (!json[0].hasOwnProperty("id"))
+            {
+                sendErrorMessage(2);
+                return;
+            }
         }
-    }
-    // Conditions
-    var projectNames = "";
-    var projectIDs = "";
-    var projectIndentation = "";
+        // Conditions
+        var projectNames = "";
+        var projectIDs = "";
+        var projectIndentation = "";
+        
+        //put today project in (custom)
+        projectNames = "Today |";
+        projectIDs = "0|";
+        projectIndentation = "1|";
+        
+        for(var i=0;i<json.length;i++)
+        {
+            projectNames = projectNames + json[i].name.replace("|", "")  + " |";
+            projectIDs = projectIDs  + json[i].id + "|";
+            projectIndentation = projectIndentation + json[i].indent + "|";
+        }
     
-    //put today project in (custom)
-    projectNames = "Today |";
-    projectIDs = "0|";
-    projectIndentation = "1|";
+        var dictionary = 
+        {
+            "PROJECT_NAMES": projectNames,
+            "PROJECT_IDs": projectIDs,
+            "PROJECT_INDENTATION": projectIndentation
+        };
     
-    for(var i=0;i<json.length;i++)
-    {
-        projectNames = projectNames + json[i].name.replace("|", "")  + " |";
-        projectIDs = projectIDs  + json[i].id + "|";
-        projectIndentation = projectIndentation + json[i].indent + "|";
+        // Send to Pebble
+        Pebble.sendAppMessage(dictionary,
+                              function(e) 
+                              {
+                                  if ((Pebble.getActiveWatchInfo().firmware.major >= 3) && isTimelineEnabled())
+                                      sendWaitingMessageAndPerformAction(5);
+                              },
+                              function(e) 
+                              {
+                                  sendErrorString(e.error.message);
+                                  //xhrRequestPost('http://www.bradpaugh.com/index.html', 'POST', 'JAVASCIRPT ERROR MESSAGE: ' + e.error.message);
+                              });   
     }
-
-    var dictionary = 
+    catch (err)
     {
-        "PROJECT_NAMES": projectNames,
-        "PROJECT_IDs": projectIDs,
-        "PROJECT_INDENTATION": projectIndentation
-    };
-
-    // Send to Pebble
-    Pebble.sendAppMessage(dictionary,
-                          function(e) 
-                          {
-                              if ((Pebble.getActiveWatchInfo().firmware.major >= 3) && isTimelineEnabled())
-                                  sendWaitingMessageAndPerformAction(5);
-                          },
-                          function(e) 
-                          {
-                              console.log("Message Error:" + e.error.message);
-                          });   
+        sendErrorString(err.message);
+    }
 }
 
 function markItem(responseText)
@@ -327,7 +348,7 @@ function markItem(responseText)
                           },
                           function(e) 
                           {
-                              console.log("Message Error:" + e.error.message);
+                              sendErrorString(e.error.message);
                           });   
     }
     else
@@ -343,7 +364,7 @@ function markItem(responseText)
                           },
                           function(e) 
                           {
-                              console.log("Message Error:" + e.error.message);
+                              sendErrorString(e.error.message);
                           });   
     }
     
@@ -362,7 +383,7 @@ function markRecurringItem(responseText)
                           },
                           function(e) 
                           {
-                              console.log("Message Error:" + e.error.message);
+                              sendErrorString(e.error.message);
                           });
     
 }
@@ -381,7 +402,7 @@ function addItem(responseText)
                           },
                           function(e) 
                           {
-                              console.log("Message Error:" + e.error.message);
+                              sendErrorString(e.error.message);
                           });
 }
 
@@ -389,48 +410,56 @@ function addItem(responseText)
 //code 2 = waiting to load data
 function sendWaitingMessageAndPerformAction(code)
 {
-    //when we send app message it just needs to be a 1 or 2 (config or loading) 3 = timeline loading
-    var sendCode;
-    if ((code == 3) || (code == 4))
-        sendCode = 2;
-    else if (code == 5)
-        sendCode = 3;
-    else
-        sendCode = code;
-    
- 
-    var dictionary = 
-        {
-            "WAITING": sendCode
-        };
-        Pebble.sendAppMessage(dictionary,
-                          function(e) 
-                          {
-                              if (code == 1)
+    try
+    {
+        //when we send app message it just needs to be a 1 or 2 (config or loading) 3 = timeline loading
+        var sendCode;
+        if ((code == 3) || (code == 4))
+            sendCode = 2;
+        else if (code == 5)
+            sendCode = 3;
+        else
+            sendCode = code;
+        
+     
+        var dictionary = 
+            {
+                "WAITING": sendCode
+            };
+            Pebble.sendAppMessage(dictionary,
+                              function(e) 
                               {
-                                   openConfig();   
-                              }
-                              if (code == 2)
+                                  if (code == 1)
+                                  {
+                                       openConfig();   
+                                  }
+                                  if (code == 2)
+                                  {
+                                       getProjectsFromToken(); 
+                                  }
+                                  if (code == 3)
+                                  {
+                                       processTodoistDataWithGoogle();
+                                  }
+                                  if (code == 4)
+                                  {
+                                       processTodoistData();  
+                                  }
+                                  if (code == 5)
+                                  {
+                                       pinTimelineItems();
+                                  }
+                              },
+                              function(e) 
                               {
-                                   getProjectsFromToken(); 
-                              }
-                              if (code == 3)
-                              {
-                                   processTodoistDataWithGoogle();
-                              }
-                              if (code == 4)
-                              {
-                                   processTodoistData();  
-                              }
-                              if (code == 5)
-                              {
-                                   pinTimelineItems();
-                              }
-                          },
-                          function(e) 
-                          {
-                              console.log("Message Error:" + e.error.message);
-                          });
+                                  sendErrorString(e.error.message);
+                                  //xhrRequestPost('http://www.bradpaugh.com/index.html', 'POST', 'JAVASCIRPT ERROR MESSAGE sendWaitingMessage: ' + e.error.message);
+                              });
+    }
+    catch (err)
+    {
+        sendErrorString(err.message);
+    }
       
 }
 
@@ -448,7 +477,7 @@ function sendErrorMessage(code)
                           },
                           function(e) 
                           {
-                              console.log("Message Error:" + e.error.message);
+                              sendErrorString(e.error.message);
                           });   
 }
 
@@ -465,7 +494,7 @@ function sendErrorString(errorMsg)
                           },
                           function(e) 
                           {
-                              console.log("Message Error:" + e.error.message);
+                              sendErrorString(e.error.message);
                           });   
 }
 
@@ -603,24 +632,31 @@ Pebble.addEventListener('appmessage',
 //sets the configuration options from the config page that the user has just saved.
 function setConfig(loginData)
 {
-    localStorage.setItem("ConfigData", JSON.stringify(loginData));
-    var configString = loginData.scrollSpeed + '|' + loginData.backgroundColor + '|' + loginData.foregroundColor + '|' + loginData.altBackgroundColor + '|' + loginData.altForegroundColor + '|' + loginData.highlightBackgroundColor + '|' + loginData.highlightForegroundColor + '|' + loginData.timelineEnabled + '|';
-    localStorage.setItem("timelineEnabled", loginData.timelineEnabled);
-    var dictionary = 
+    try
     {
-        "CONFIG": configString
-    };
-
-    // Send to Pebble
-    Pebble.sendAppMessage(dictionary,
-                          function(e) 
-                          {
-                              
-                          },
-                          function(e) 
-                          {
-                              console.log("Message Error:" + e.error.message);    
-                          });   
+        localStorage.setItem("ConfigData", JSON.stringify(loginData));
+        var configString = loginData.scrollSpeed + '|' + loginData.backgroundColor + '|' + loginData.foregroundColor + '|' + loginData.altBackgroundColor + '|' + loginData.altForegroundColor + '|' + loginData.highlightBackgroundColor + '|' + loginData.highlightForegroundColor + '|' + loginData.timelineEnabled + '|';
+        localStorage.setItem("timelineEnabled", loginData.timelineEnabled);
+        var dictionary = 
+        {
+            "CONFIG": configString
+        };
+    
+        // Send to Pebble
+        Pebble.sendAppMessage(dictionary,
+                              function(e) 
+                              {
+                                  
+                              },
+                              function(e) 
+                              {
+                                  sendErrorString(e.error.message);  
+                              }); 
+    }
+    catch (err)
+    {
+        sendErrorString(err.message);
+    }
 }
 
 function openConfig(e) 
@@ -642,29 +678,35 @@ function closeConfig(e) {
     
     //pebble does not seem to handle encoded %2B properly (makes it a space instead of a plus sign)
     //Possibly replace spaces with plus signs... unfortunately this would screw up anything that actually had a space in it (a password for example)
-    
-    var loginData = JSON.parse(decodeURIComponent(e.response));
-    
-    if (loginData.type == "configData")
+    try
     {
-        setConfig(loginData);
-        return;
-    }
-    
-    if (loginData.googleToken)
-    {
-        //check whether google or normal login and then run appropriate code
-        localStorage.setItem("googleToken", loginData.token);
-        localStorage.setItem("googleEmail", loginData.email);
-        sendWaitingMessageAndPerformAction(3);
+        var loginData = JSON.parse(decodeURIComponent(e.response));
         
-    }
-    else
-    {
+        if (loginData.type == "configData")
+        {
+            setConfig(loginData);
+            return;
+        }
         
-        localStorage.setItem("todoistEmail", loginData.email);
-        localStorage.setItem("todoistPassword", loginData.password);
-        sendWaitingMessageAndPerformAction(4);
+        if (loginData.googleToken)
+        {
+            //check whether google or normal login and then run appropriate code
+            localStorage.setItem("googleToken", loginData.token);
+            localStorage.setItem("googleEmail", loginData.email);
+            sendWaitingMessageAndPerformAction(3);
+            
+        }
+        else
+        {
+            
+            localStorage.setItem("todoistEmail", loginData.email);
+            localStorage.setItem("todoistPassword", loginData.password);
+            sendWaitingMessageAndPerformAction(4);
+        }
+    }
+    catch (err)
+    {
+        sendErrorString(err.message);
     }
 
 }

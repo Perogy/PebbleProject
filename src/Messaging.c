@@ -3,6 +3,8 @@
 #include "WindowData.h"
 #include "ErrorWindow.h"
 
+char *userMessage = "Version 1.18 - Fixed a bug where some IPhone users were unable to load the app. I unfortunately do not have an IPhone to test on so if any users still have bugs please email me at bradpaugh@gmail.com and I'll try and work through your problem. Thanks!\n\nPress back to return to the app";
+
 char *translate_error(AppMessageResult result) {
   switch (result) {
     case APP_MSG_OK: return "APP_MSG_OK";
@@ -85,6 +87,15 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
                 while (window_stack_get_top_window() != window)
                 {
                     window_stack_pop(1);
+                }
+                if (wd->config->timelineEnabled)
+                {
+                    //display new version message if needed
+                    if (!loadMessageShown())
+                    {
+                        displayMessage(userMessage, 101);
+                        saveMessageShown();
+                    }
                 }
             break;
             case SELECTED_ITEM:
@@ -191,13 +202,16 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
             window_stack_pop(1);
         }
         
-        //display new version message if needed
+        //if timeline is not enabled, display here otherwise display after timeline data has been sent
+        if (!wd->config->timelineEnabled)
+        {
+            //display new version message if needed
             if (!loadMessageShown())
             {
-                displayMessage("Version 1.16 - You now have the ability to enable or disable the timeline from the config screen.", 101);
+                displayMessage(userMessage, 101);
                 saveMessageShown();
             }
-
+        }
     }
     if (itemNamesStr)
     {
