@@ -11,9 +11,11 @@
         var SCOPE       =   'https://www.googleapis.com/auth/userinfo.email';
         var CLIENTID    =   '659714855848-j5mii2gk0h0u3roj2eobdet5g3rfr324.apps.googleusercontent.com';
         var REDIRECT    =   'https://perogy.github.io/PebbleProject/callback.html';
+		var REDIRECTTODOIST    =   'https://perogy.github.io/PebbleProject/callbackTodoist.html';
         var LOGOUT      =   'http://accounts.google.com/Logout';
         var TYPE        =   'token';
         var _url        =   OAUTHURL + 'scope=' + SCOPE + '&client_id=' + CLIENTID + '&redirect_uri=' + REDIRECT + '&response_type=' + TYPE;
+		var _urlTodoist = 'https://todoist.com/oauth/authorize?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?scope=data:read_write?state=cc88177b38774df2acfedd668be53824';
         var acToken;
         var tokenType;
         var expiresIn;
@@ -39,6 +41,11 @@
                 } catch(e) {
                 }
             }, 500);
+        }
+		
+		function loginTodoistNew() {
+            var win         =   window.open(_urlTodoist, "windowname1", 'width=800, height=600'); 
+
         }
 
         function validateToken(token) {
@@ -93,6 +100,7 @@
 		var return_to = getQueryParam('return_to', 'pebblejs://close#');
 		location.href = return_to + encodeURIComponent(JSON.stringify(loginData));
 	}
+	
 	
 	function getQueryParam(variable, defaultValue) {
 	  // Find all URL parameters
@@ -230,7 +238,7 @@
 				</div>
 			</div>
 			<div style="margin:0 auto;width:255px;">
-				<button type="button" onClick='loginTodoist();' id="loginTodoist" style="width: 255px; height:40px">
+				<button type="button" onClick='loginTodoistNew();' id="loginTodoist" style="width: 255px; height:40px">
 		        Login with Todoist
 				</button>
 			</div>

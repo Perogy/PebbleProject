@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+var token;
+var state;
+
+var xhrRequest = function (url, type, callback) {
+	  var xhr = new XMLHttpRequest();
+	  xhr.onload = function () {
+	    callback(this.responseText);
+	  };
+	  xhr.open(type, url);
+	  xhr.send();
+	};
+
+function getUrlParameter(sParam)
+{
+    console.log(window.location);
+    var sPageURL = window.location.hash.substring(1);
+    var sURLVariables = sPageURL.split('&');
+    console.log(sURLVariables);
+    for (var i = 0; i < sURLVariables.length; i++) 
+    {
+        var sParameterName = sURLVariables[i].split('=');
+        if (sParameterName[0] == sParam) 
+        {
+            return sParameterName[1];
+        }
+    }
+}
+
+//this is basically the same as getURLParameter, check if they are both exactly the same later and get rid of one
+function getQueryParam(variable, defaultValue) 
+{
+	  // Find all URL parameters
+	  var query = location.search.substring(1);
+	  var vars = query.split('&');
+	  for (var i = 0; i < vars.length; i++) {
+		var pair = vars[i].split('=');
+
+		// If the query variable parameter is found, decode it to use and return it for use
+		if (pair[0] === variable) {
+		  return decodeURIComponent(pair[1]);
+		}
+	  }
+	  return defaultValue || false;
+}
+
+function getTokenFromTodoist(responseText) 
+{
+	var json = JSON.parse(responseText);
+	var loginData = {token:json.access_token, todoistToken:true};
+	var return_to = getQueryParam('return_to', 'pebblejs://close#');
+    location.href = return_to + encodeURIComponent(JSON.stringify(loginData));
+}
+
+function run()
+{
+    code = getUrlParameter('code');
+	state = getUrlParameter('state');
+	var email = xhrRequest('https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + token + '?redirect_uri=https://perogy.github.io/PebbleProject/callbackTodoist.html', 'POST', getTokenFromTodoist);
+
+}
+window.onload = run()
+
+</script>
+</head>
+<body>
+
+<h2>You logged in!</h2>
+<div id="myDiv"></div>
+
+</body>
+</html>
