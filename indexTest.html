@@ -97,6 +97,7 @@
 	};
 
 	function loginTodoist() {
+		console.log('wtf');
 		var loginData = {email:document.getElementById('todoistEmail').value, password:document.getElementById('todoistPassword').value, googleToken:false};
 		var return_to = getQueryParam('return_to', 'pebblejs://close#');
 		location.href = return_to + encodeURIComponent(JSON.stringify(loginData));
