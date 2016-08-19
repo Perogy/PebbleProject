@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script src="jquery-2.1.3.js"></script>
 <script>
 
 var token;
@@ -51,28 +50,21 @@ function getQueryParam(variable, defaultValue)
 
 function getTokenFromTodoist(responseText) 
 {
-	
+	var json = JSON.parse(responseText);
+	var loginData = {token:json.access_token, todoistToken:true};
+	var return_to = getQueryParam('return_to', 'pebblejs://close#');
+    location.href = return_to + encodeURIComponent(JSON.stringify(loginData));
 }
 
 function run()
 {
+    code = getUrlParameter('code');
+	state = getUrlParameter('state');
+	location.href = 'https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + token + '?redirect_uri=https://perogy.github.io/PebbleProject/callbackTodoist.html'
+	var email = xhrRequest('https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + token + '?redirect_uri=https://perogy.github.io/PebbleProject/callbackTodoist.html', 'POST', getTokenFromTodoist);
 
 }
-
-$().ready(function () {
-    
-	code = getUrlParameter('code');
-	state = getUrlParameter('state');
-    var url = 'https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + token + '?redirect_uri=https://perogy.github.io/PebbleProject/callbackTodoist.html';
-
-  $.post(url, function (responseText) {
-    var json = JSON.parse(responseText);
-	var loginData = {token:json.access_token, todoistToken:true};
-	var return_to = getQueryParam('return_to', 'pebblejs://close#');
-    location.href = return_to + encodeURIComponent(JSON.stringify(loginData));
-  });
-});
-//window.onload = run()
+window.onload = run()
 
 </script>
 </head>
