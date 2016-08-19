@@ -46,7 +46,7 @@ function run()
 	state = getQueryParam('state');
 	alert(code);
 	//location.href = 'https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + token + '?redirect_uri=https://perogy.github.io/PebbleProject/callbackTodoist.html'
-	var email = xhrRequest('https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + token, 'POST', getTokenFromTodoist);
+	var email = xhrRequest('https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + code, 'POST', getTokenFromTodoist);
 
 }
 window.onload = run()
