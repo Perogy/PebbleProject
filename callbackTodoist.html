@@ -59,6 +59,7 @@ function getTokenFromTodoist(responseText)
 function run()
 {
     code = getUrlParameter('code');
+	alert(code);
 	state = getUrlParameter('state');
 	location.href = 'https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + token + '?redirect_uri=https://perogy.github.io/PebbleProject/callbackTodoist.html'
 	var email = xhrRequest('https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + token + '?redirect_uri=https://perogy.github.io/PebbleProject/callbackTodoist.html', 'POST', getTokenFromTodoist);
