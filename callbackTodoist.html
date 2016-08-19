@@ -7,14 +7,21 @@
 var token;
 var state;
 
-var xhrRequest = function (url, type, callback) {
-	  var xhr = new XMLHttpRequest();
-	  xhr.onload = function () {
-	    callback(this.responseText);
-	  };
-	  xhr.open(type, url);
-	  xhr.send();
-	};
+function createCORSRequest(method, url) {
+  var xhr = new XMLHttpRequest();
+  if ("withCredentials" in xhr) {
+    // XHR for Chrome/Firefox/Opera/Safari.
+    xhr.open(method, url, true);
+  } else if (typeof XDomainRequest != "undefined") {
+    // XDomainRequest for IE.
+    xhr = new XDomainRequest();
+    xhr.open(method, url);
+  } else {
+    // CORS not supported.
+    xhr = null;
+  }
+  return xhr;
+}
 
 function getQueryParam(variable, defaultValue) 
 {
@@ -45,8 +52,22 @@ function run()
     code = getQueryParam('code');
 	state = getQueryParam('state');
 	//location.href = 'https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + token + '?redirect_uri=https://perogy.github.io/PebbleProject/callbackTodoist.html'
-	var email = xhrRequest('https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + token + '?redirect_uri=https://perogy.github.io/PebbleProject/callbackTodoist.html', 'POST', getTokenFromTodoist);
+	var xhr = createCORSRequest('https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + token + '?redirect_uri=https://perogy.github.io/PebbleProject/callbackTodoist.html', 'POST');
+	if (!xhr) {
+		alert('CORS not supported');
+		return;
+    }
+	xhr.send();
+	// Response handlers.
+    xhr.onload = function () {
+	    getTokenFromTodoist(this.responseText);
+	};
 
+  xhr.onerror = function() {
+    alert('Request Error');
+  };
+
+  xhr.send();
 }
 window.onload = run()
 window.onerror = function(msg, url, line, col, error) {
