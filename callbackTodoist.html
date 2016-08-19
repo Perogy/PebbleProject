@@ -7,7 +7,7 @@
 var token;
 var state;
 
-function createCORSRequest(method, url) {
+function createCORSRequest(url, method) {
   var xhr = new XMLHttpRequest();
   if ("withCredentials" in xhr) {
     // XHR for Chrome/Firefox/Opera/Safari.
