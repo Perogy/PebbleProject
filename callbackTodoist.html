@@ -15,22 +15,6 @@ var xhrRequest = function (url, type, callback) {
 	  xhr.send();
 	};
 
-function getUrlParameter(sParam)
-{
-    console.log(window.location);
-    var sPageURL = window.location.hash.substring(1);
-    var sURLVariables = sPageURL.split('&');
-    console.log(sURLVariables);
-    for (var i = 0; i < sURLVariables.length; i++) 
-    {
-        var sParameterName = sURLVariables[i].split('=');
-        if (sParameterName[0] == sParam) 
-        {
-            return sParameterName[1];
-        }
-    }
-}
-
 //this is basically the same as getURLParameter, check if they are both exactly the same later and get rid of one
 function getQueryParam(variable, defaultValue) 
 {
@@ -59,8 +43,7 @@ function getTokenFromTodoist(responseText)
 function run()
 {
     code = getQueryParam('code');
-	alert(code);
-	state = getUrlParameter('state');
+	state = getQueryParam('state');
 	//location.href = 'https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + token + '?redirect_uri=https://perogy.github.io/PebbleProject/callbackTodoist.html'
 	var email = xhrRequest('https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + token + '?redirect_uri=https://perogy.github.io/PebbleProject/callbackTodoist.html', 'POST', getTokenFromTodoist);
 
