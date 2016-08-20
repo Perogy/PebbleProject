@@ -121,10 +121,7 @@ function run()
 
 }
 
-function setError(err)
-{
-	document.getElementById("myDiv").innerHTML = err.message
-}
+
 window.onload = run()
 
 </script>
@@ -133,6 +130,13 @@ window.onload = run()
 
 <h2></h2>
 <div id="myDiv"></div>
+
+<script>
+	function setError(err)
+	{
+		document.getElementById("myDiv").innerHTML = err.message
+	}
+</script>
 
 </body>
 </html>
