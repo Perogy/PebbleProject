@@ -6,6 +6,54 @@
 <script>
 
 
+
+
+
+/**
+ * Make a X-Domain request to url and callback.
+ *
+ * @param url {String}
+ * @param method {String} HTTP verb ('GET', 'POST', 'DELETE', etc.)
+ * @param data {String} request body
+ * @param callback {Function} to callback on completion
+ * @param errback {Function} to callback on error
+ */
+function xdr(url, method, callback, errback) {
+    var req;
+    
+    if(XMLHttpRequest) {
+        req = new XMLHttpRequest();
+
+        if('withCredentials' in req) {
+            req.open(method, url, true);
+            req.onerror = errback;
+            req.onreadystatechange = function() {
+                if (req.readyState === 4) {
+                    if (req.status >= 200 && req.status < 400) {
+                        callback(req.responseText);
+                    } else {
+                        errback(new Error('Response returned with non-OK status'));
+                    }
+                }
+            };
+            req.send(data);
+        }
+    } else if(XDomainRequest) {
+        req = new XDomainRequest();
+        req.open(method, url);
+        req.onerror = errback;
+        req.onload = function() {
+            callback(req.responseText);
+        };
+        req.send();
+    } else {
+        errback(new Error('CORS not supported'));
+    }
+}
+
+
+
+
 var token;
 var code;
 var state;
@@ -60,16 +108,22 @@ function run()
 		alert(code);
 		//location.href = 'https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + token + '?redirect_uri=https://perogy.github.io/PebbleProject/callbackTodoist.html'
 		//var email = xhrRequest('https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + code, 'POST', getTokenFromTodoist);
-		$.getJSON('https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + code, function(data)
-					  {
-						  getTokenFromTodoist(data)
-					  });
+		//$.getJSON('https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + code, function(data)
+		//			  {
+		//				  getTokenFromTodoist(data)
+		//			  });
+		xdr('https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + code, 'POST', getTokenFromTodoist, setError);
 	}
 	catch(err)
 	{
 		document.getElementById("myDiv").innerHTML = err.message;
 	}
 
+}
+
+function setError(err)
+{
+	document.getElementById("myDiv").innerHTML = err.message
 }
 window.onload = run()
 
