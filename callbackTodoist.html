@@ -8,14 +8,22 @@ var token;
 var code;
 var state;
 
-var xhrRequest = function (url, type, callback) {
+var xhrRequest = function (url, type, callback) 
+{
+	try
+	{
 	  var xhr = new XMLHttpRequest();
 	  xhr.onload = function () {
 	    callback(this.responseText);
 	  };
 	  xhr.open(type, url);
 	  xhr.send();
-	};
+	}
+	catch(err)
+	{
+		document.getElementById("myDiv").innerHTML = err.message;
+	}
+};
 
 function getQueryParam(variable, defaultValue) 
 {
