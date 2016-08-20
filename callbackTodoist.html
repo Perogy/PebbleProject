@@ -43,7 +43,7 @@ function xdr(url, method, callback, errback) {
                     }
                 }
             };
-            req.send(data);
+            req.send();
         }
     } else if(XDomainRequest) {
         req = new XDomainRequest();
