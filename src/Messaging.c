@@ -3,7 +3,7 @@
 #include "WindowData.h"
 #include "ErrorWindow.h"
 
-char *userMessage = "Version 1.18 - Fixed a bug where some IPhone users were unable to load the app. I unfortunately do not have an IPhone to test on so if any users still have bugs please email me at bradpaugh@gmail.com and I'll try and work through your problem. Thanks!\n\nPress back to return to the app";
+char *userMessage = "Version 1.19 BETA1 - This is the first beta build of the app using the new todoist API V7. This is a huge change so let me know if you have any problems at bradpaugh@gmail.com. Thanks for testing!!";
 
 char *translate_error(AppMessageResult result) {
   switch (result) {

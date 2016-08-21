@@ -1,3 +1,26 @@
+var clientID = '2a11ee6e18fe46ad89f9dcbd5507b76b';
+var secret = 'cc88177b38774df2acfedd668be53824';
+var code;
+var selectedProjectID;
+
+var markCompletedUUID;
+var markCompletedItemID;
+
+function createUUID() {
+    // http://www.ietf.org/rfc/rfc4122.txt
+    var s = [];
+    var hexDigits = "0123456789abcdef";
+    for (var i = 0; i < 36; i++) {
+        s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+    }
+    s[14] = "4";  // bits 12-15 of the time_hi_and_version field to 0010
+    s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1);  // bits 6-7 of the clock_seq_hi_and_reserved to 01
+    s[8] = s[13] = s[18] = s[23] = "-";
+
+    var uuid = s.join("");
+    return uuid;
+}
+
 var xhrRequest = function (url, type, callback) {
   var xhr = new XMLHttpRequest();
   xhr.onload = function () {
@@ -66,22 +89,30 @@ function startsWith(str, strMatch)
     return false;
 }
 
+function addDays(date, days) {
+    var result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+}
 
 function getItems(responseText)
 {
         // responseText contains a JSON object with item info
         var json = JSON.parse(responseText);
+        json = json.items;
+       
+        //sort the list based on the item order property
+        json.sort(function(a, b) {
+            return parseInt(a.item_order) - parseInt(b.item_order);
+        });
+    
         var isToday = 0;
-        //check if query was a "Today" query and go into the "data" section if it is
-        if (json[0])
+        //if selected project ID is 0 then it means "today" was selected
+        if (selectedProjectID === 0)
         {
-            if (json[0].hasOwnProperty("query"))
-            {
-                json = json[0].data;
-                isToday = 1;
-            }
+            isToday = 1;
         }
-        
+            
         if (json[0])
         {
             if (!json[0].hasOwnProperty("id"))
@@ -105,9 +136,34 @@ function getItems(responseText)
     
         for(var i=0;i<json.length;i++)
         {
+            if (isToday)
+            {
+                var today = new Date();
+                today.setHours(0);
+                today.setMinutes(0);
+                today.setSeconds(0);
+                //considered "Today" if due date is in the current day or less (overdue)
+                addDays(today, 1);
+                if (json[i].due_date_utc === null)
+                    continue;
+                var d = new Date(json[i].due_date_utc);
+                if (d >= today)
+                {
+                    continue;
+                }
+            }
+            else
+            {
+                //only proccess items that are in the selected project ID
+                if (json[i].project_id != selectedProjectID)
+                {
+                    continue;
+                }
+            }
+            
+            
             //items added via outlook have an ID tag in their content and some really weird syntax. The below is to fix this and show it as a normal item
             json[i].content = removeOutlookGarbage(json[i].content);
-            
             
             itemNames = itemNames + json[i].content.replace("|", "") + " |";
             itemIDs = itemIDs  + json[i].id + "|";
@@ -116,13 +172,13 @@ function getItems(responseText)
             else
                 itemDates = itemDates + json[i].date_string + "|";
             itemIndentation = itemIndentation + json[i].indent + "|";
-            if (json[i].due_date === null)
+            if (json[i].due_date_utc === null)
             {
                 itemDueDates = itemDueDates + "|"; 
             }
             else
             {
-                var d = new Date(json[i].due_date);
+                var d = new Date(json[i].due_date_utc);
                 //if the time is 23:59 this specifies "no time"
                 if ((d.getHours() == 23) && (d.getMinutes() == 59))
                     itemDueDates = itemDueDates + monthNames[d.getMonth()] + " " + d.getDate() + "|";
@@ -171,9 +227,9 @@ function getAllItemsForTimeline(responseText)
 {
     try
     {
-    // responseText contains a JSON object with item info
+        // responseText contains a JSON object with item info
         var json = JSON.parse(responseText);
-        json = json.Items;
+        json = json.items;
     
     //some testing code
     /*var json = [];
@@ -188,10 +244,10 @@ function getAllItemsForTimeline(responseText)
     
         for(var i=0;i<json.length;i++)
         {
-            if (json[i].due_date)
+            if (json[i].due_date_utc)
             {
                 
-                var date = new Date(json[i].due_date);
+                var date = new Date(json[i].due_date_utc);
                 var minDate = new Date();
                 //min date is two days ago. Have to use this weird calculation because javascript is stupid
                 minDate.setTime( minDate.getTime() - 2 * 86400000 );
@@ -270,8 +326,8 @@ function getToken(responseText)
         return;
     }
     // Conditions
-    var token = json.token;
-    localStorage.setItem("todoistMiniToken", token);
+    var token = json.access_token;
+    localStorage.setItem("todoistMiniTokenV7", token);
     getProjectsFromToken();
 }
 
@@ -281,6 +337,7 @@ function getProjects(responseText)
     {
         // responseText contains a JSON object with project data
         var json = JSON.parse(responseText);
+        json = json.projects;
     
         if (json[0])
         {
@@ -299,6 +356,11 @@ function getProjects(responseText)
         projectNames = "Today |";
         projectIDs = "0|";
         projectIndentation = "1|";
+        
+        //sort the list based on the item order property
+        json.sort(function(a, b) {
+            return parseInt(a.item_order) - parseInt(b.item_order);
+        });
         
         for(var i=0;i<json.length;i++)
         {
@@ -335,7 +397,7 @@ function getProjects(responseText)
 
 function markItem(responseText)
 {
-    if (responseText == "\"ok\"")
+    if (responseText.includes("ok"))
     {
         var dictionary = 
         {
@@ -372,6 +434,8 @@ function markItem(responseText)
 
 function markRecurringItem(responseText)
 {
+    if (responseText.includes("ok"))
+    {
         var dictionary = 
         {
             "SELECTED_ITEM": "1"
@@ -384,7 +448,24 @@ function markRecurringItem(responseText)
                           function(e) 
                           {
                               sendErrorString(e.error.message);
-                          });
+                          });   
+    }
+    else
+    {
+        var dictionary = 
+        {
+            "SELECTED_ITEM": "0"
+        };
+        Pebble.sendAppMessage(dictionary,
+                          function(e) 
+                          {
+                              
+                          },
+                          function(e) 
+                          {
+                              sendErrorString(e.error.message);
+                          });   
+    }
     
 }
 
@@ -453,7 +534,7 @@ function sendWaitingMessageAndPerformAction(code)
                               function(e) 
                               {
                                   sendErrorString(e.error.message);
-                                  //xhrRequestPost('http://www.bradpaugh.com/index.html', 'POST', 'JAVASCIRPT ERROR MESSAGE sendWaitingMessage: ' + e.error.message);
+                                  //xhrRequestPost('http://www.bradpaugh.com/index.html', 'POST', 'JAVASCRIPT ERROR MESSAGE sendWaitingMessage: ' + e.error.message);
                               });
     }
     catch (err)
@@ -500,13 +581,14 @@ function sendErrorString(errorMsg)
 
 function processTodoistData() 
 {
-    var url = "https://todoist.com/API/login?email=" +
-    encodeURIComponent(localStorage.getItem("todoistEmail")) + "&password=" + encodeURIComponent(localStorage.getItem("todoistPassword"));
-    localStorage.removeItem("todoistEmail");
-    localStorage.removeItem("todoistPassword");
+    var url = "https://todoist.com/oauth/access_token?client_id=" + encodeURIComponent(clientID) + "&client_secret=" + encodeURIComponent(secret) + "&code=" + encodeURIComponent(code);
+    //localStorage.removeItem("todoistEmail");
+    //localStorage.removeItem("todoistPassword");
     //note that xhr request is ASYNCHRONOUS everything after it in this function will get executed
     //before it is even finished the next path of execution HAS to be in the callback function
-    xhrRequest(url, 'GET', getToken);
+    xhrRequest(url, 'POST', getToken);
+    
+    //getProjectsFromToken();
 }
 
 function processTodoistDataWithGoogle()
@@ -520,42 +602,63 @@ function processTodoistDataWithGoogle()
 
 function getProjectsFromToken()
 {
-    var url = "https://todoist.com/API/getProjects?token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
+    var url = "https://api.todoist.com/API/v7/sync?token=" + encodeURIComponent(localStorage.getItem("todoistMiniTokenV7")) + "&sync_token=" + encodeURIComponent("'*'") + "&resource_types=" + encodeURIComponent("[\"projects\"]");
     xhrRequest(url, 'GET', getProjects);
 }
 
 function getItemsForSelectedProject(projectID)
 {
-    var url = "https://todoist.com/API/getUncompletedItems?project_id=" +
-    encodeURIComponent(projectID) + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
+    selectedProjectID = projectID;
+    console.log("\nprojectID: " + projectID);
+    var url = "https://api.todoist.com/API/v7/sync?token=" + encodeURIComponent(localStorage.getItem("todoistMiniTokenV7")) + "&sync_token=" + encodeURIComponent("'*'") + "&resource_types=" + encodeURIComponent("[\"items\"]");
     xhrRequest(url, 'GET', getItems);
 }
 
 function getItemsForToday()
 {
-    var url = "https://todoist.com/API/query?queries=" + encodeURIComponent("[\"Today\"]") + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
+    selectedProjectID = 0;
+    var url = "https://api.todoist.com/API/v7/sync?token=" + encodeURIComponent(localStorage.getItem("todoistMiniTokenV7")) + "&sync_token=" + encodeURIComponent("'*'") + "&resource_types=" + encodeURIComponent("[\"items\"]");
     xhrRequest(url, 'GET', getItems);
 }
 
 function pinTimelineItems()
 {
-    //var url = "https://api.todoist.com/API/query?queries=" + encodeURIComponent("[\"No Due Date\"]") + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
-    var url = "https://api.todoist.com/API/v6/sync?token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken")) + "&seq_no=" + encodeURIComponent("0") + "&seq_no_global=" + encodeURIComponent("0") + "&resource_types=" + encodeURIComponent("[\"items\"]");
+    //var url = "https://api.todoist.com/API/query?queries=" + encodeURIComponent("[\"No Due Date\"]") + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniTokenV7"));
+    var url = "https://api.todoist.com/API/v7/sync?token=" + encodeURIComponent(localStorage.getItem("todoistMiniTokenV7")) + "&sync_token=" + encodeURIComponent("'*'") + "&resource_types=" + encodeURIComponent("[\"items\"]");
     xhrRequest(url, 'GET', getAllItemsForTimeline);
 }
 
 function addNewItem(itemText, projectID)
 {
-    var url = "https://todoist.com/API/addItem?content=" +
-    encodeURIComponent(itemText) + "&project_id=" + encodeURIComponent(projectID) + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
-    
+    var commandsjson = [{
+        "type": "item_add", 
+        "temp_id": createUUID(), 
+        "uuid": createUUID(), 
+        "args": 
+        {
+            "content": itemText, 
+            "project_id": projectID
+        }
+    }];
+    var url = "https://todoist.com/API/v7/sync?token=" + encodeURIComponent(localStorage.getItem("todoistMiniTokenV7")) + "&commands=" + encodeURIComponent(JSON.stringify(commandsjson));
     xhrRequest(url, 'GET', addItem);
 }
 
 function markItemAsCompleted(itemID)
 {
-    var url = "https://todoist.com/API/completeItems?ids=" +
-    encodeURIComponent("[" + itemID + "]") + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
+    markCompletedUUID = createUUID();
+    markCompletedItemID = itemID;
+    var commandsjson = [{
+        "type": "item_complete", 
+        "uuid": createUUID(), 
+        "args": 
+        {
+            "ids": [itemID]
+        }
+    }];
+    
+    var url = "https://todoist.com/API/v7/sync?token=" + encodeURIComponent(localStorage.getItem("todoistMiniTokenV7")) + "&commands=" + encodeURIComponent(JSON.stringify(commandsjson));
+    
     var pin = {
                 "id": "TodoistMiniItem-" + itemID
               };
@@ -573,8 +676,19 @@ function markItemAsCompleted(itemID)
 
 function markRecurringItemAsCompleted(itemID)
 {
-    var url = "https://todoist.com/API/updateRecurringDate?ids=" +
-    encodeURIComponent("[" + itemID + "]") + "&token=" + encodeURIComponent(localStorage.getItem("todoistMiniToken"));
+    markCompletedUUID = createUUID();
+    markCompletedItemID = itemID;
+    var commandsjson = [{
+        "type": "item_update_date_complete", 
+        "uuid": createUUID(), 
+        "args": 
+        {
+            "id": itemID
+        }
+    }];
+    
+    var url = "https://todoist.com/API/v7/sync?token=" + encodeURIComponent(localStorage.getItem("todoistMiniTokenV7")) + "&commands=" + encodeURIComponent(JSON.stringify(commandsjson));
+    
     xhrRequest(url, 'GET', markRecurringItem);
     if ((Pebble.getActiveWatchInfo().firmware.major >= 3) && isTimelineEnabled())
     {
@@ -591,8 +705,8 @@ Pebble.addEventListener('ready',
         //enables timeline by default if it has never been set.
         if (localStorage.getItem("timelineEnabled") === null)
             localStorage.setItem("timelineEnabled", "true");
-        //localStorage.removeItem("todoistMiniToken");
-        if (localStorage.getItem("todoistMiniToken") === null)
+
+        if (localStorage.getItem("todoistMiniTokenV7") === null)
         {
             sendWaitingMessageAndPerformAction(1);
         }
@@ -663,12 +777,12 @@ function openConfig(e)
 {
     if (localStorage.getItem("ConfigData") === null)
     {
-        Pebble.openURL('https://perogy.github.io/PebbleProject/index.html');
+        Pebble.openURL('https://perogy.github.io/PebbleProject/indexTest.html');
     }
     else
     {
         var configData = JSON.parse(localStorage.getItem("ConfigData"));
-        Pebble.openURL('https://perogy.github.io/PebbleProject/index.html#' + 'scrollSpeed=' + configData.scrollSpeed + '&backgroundColor=' + configData.backgroundColor + '&foregroundColor=' + configData.foregroundColor + '&altBackgroundColor=' + 
+        Pebble.openURL('https://perogy.github.io/PebbleProject/indexTest.html#' + 'scrollSpeed=' + configData.scrollSpeed + '&backgroundColor=' + configData.backgroundColor + '&foregroundColor=' + configData.foregroundColor + '&altBackgroundColor=' + 
                                                             configData.altBackgroundColor + '&altForegroundColor=' + configData.altForegroundColor + '&highlightBackgroundColor=' + configData.highlightBackgroundColor + '&highlightForegroundColor=' + configData.highlightForegroundColor + '&timelineEnabled=' + configData.timelineEnabled);
         
     }
@@ -698,9 +812,7 @@ function closeConfig(e) {
         }
         else
         {
-            
-            localStorage.setItem("todoistEmail", loginData.email);
-            localStorage.setItem("todoistPassword", loginData.password);
+            code = loginData.code;
             sendWaitingMessageAndPerformAction(4);
         }
     }
