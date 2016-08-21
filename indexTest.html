@@ -96,7 +96,6 @@
 	};
 
 	function loginTodoist() {
-		console.log('wtf');
 		var loginData = {email:document.getElementById('todoistEmail').value, password:document.getElementById('todoistPassword').value, googleToken:false};
 		var return_to = getQueryParam('return_to', 'pebblejs://close#');
 		location.href = return_to + encodeURIComponent(JSON.stringify(loginData));
@@ -231,26 +230,11 @@
 				
 		<div style="margin:0 auto;width:90%;border-style: solid;padding:10px 5px;border-color: #5980DC;background-color:#F2F2F2">
 			<div style="margin:0 auto;width:255px;">
-				<div class="block">
-					<label>Email:</label><input type="text" id="todoistEmail"/>
-				</div>
-				<div class="block">
-					<label>Password:</label><input type="password" id="todoistPassword"/>
-				</div>
-			</div>
-			<div style="margin:0 auto;width:255px;">
 				<button type="button" onClick='loginTodoistNew();' id="loginTodoist" style="width: 255px; height:40px">
-		        Login with Todoist
+		        Login to Todoist
 				</button>
-			</div>
-			<div style="text-align:center">
-	        -OR-
 			</div>
 			<div style="margin:0 auto;width:255px;">
-				<button type="button" onClick='login();' id="loginText" style="width: 255px; height:40px;">
-					<img src="google_128.png" style="width:15%;height:90%;vertical-align:middle"/>
-                    Login with Google
-				</button>
 				<div style="text-align:center;padding-top:15px">
 					No account? <a href="http://www.todoist.com">Sign up here</a>
 				</div>
