@@ -112,6 +112,7 @@ function run()
 	{
 		code = getQueryParam('code');
 		state = getQueryParam('state');
+		var loginData = {code:code, state:state, todoistToken:true};
 		var return_to = getQueryParam('return_to', 'pebblejs://close#');
         location.href = return_to + encodeURIComponent(JSON.stringify(loginData));
 		//alert(code);
