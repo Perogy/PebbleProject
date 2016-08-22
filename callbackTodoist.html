@@ -102,7 +102,7 @@ function getTokenFromTodoist(responseText)
 {
 	var json = JSON.parse(responseText);
 	var loginData = {code:code, state:state, todoistToken:true};
-	var return_to = getQueryParam('return_to', 'pebblejs://close#');
+	var return_to = getQueryParam('return_to', 'pebblejs:///close#');
     location.href = return_to + encodeURIComponent(JSON.stringify(loginData));
 }
 
@@ -113,7 +113,7 @@ function run()
 		code = getQueryParam('code');
 		state = getQueryParam('state');
 		var loginData = {code:code, state:state, todoistToken:true};
-		var return_to = getQueryParam('return_to', 'pebblejs://close#');
+		var return_to = getQueryParam('return_to', 'pebblejs:///close#');
         location.href = return_to + encodeURIComponent(JSON.stringify(loginData));
 		//alert(code);
 		//location.href = 'https://todoist.com/oauth/access_token?client_id=2a11ee6e18fe46ad89f9dcbd5507b76b?client_secret=cc88177b38774df2acfedd668be53824?code=' + token + '?redirect_uri=https://perogy.github.io/PebbleProject/callbackTodoist.html'
