@@ -777,12 +777,12 @@ function openConfig(e)
 {
     if (localStorage.getItem("ConfigData") === null)
     {
-        Pebble.openURL('https://perogy.github.io/PebbleProject/indexTest.html');
+        Pebble.openURL('https://perogy.github.io/PebbleProject/indexNew.html');
     }
     else
     {
         var configData = JSON.parse(localStorage.getItem("ConfigData"));
-        Pebble.openURL('https://perogy.github.io/PebbleProject/indexTest.html#' + 'scrollSpeed=' + configData.scrollSpeed + '&backgroundColor=' + configData.backgroundColor + '&foregroundColor=' + configData.foregroundColor + '&altBackgroundColor=' + 
+        Pebble.openURL('https://perogy.github.io/PebbleProject/indexNew.html#' + 'scrollSpeed=' + configData.scrollSpeed + '&backgroundColor=' + configData.backgroundColor + '&foregroundColor=' + configData.foregroundColor + '&altBackgroundColor=' + 
                                                             configData.altBackgroundColor + '&altForegroundColor=' + configData.altForegroundColor + '&highlightBackgroundColor=' + configData.highlightBackgroundColor + '&highlightForegroundColor=' + configData.highlightForegroundColor + '&timelineEnabled=' + configData.timelineEnabled);
         
     }

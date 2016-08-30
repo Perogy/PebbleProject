@@ -3,7 +3,7 @@
 #include "WindowData.h"
 #include "ErrorWindow.h"
 
-char *userMessage = "Version 1.19 BETA1 - This is the first beta build of the app using the new todoist API V7. This is a huge change so let me know if you have any problems at bradpaugh@gmail.com. Thanks for testing!!";
+char *userMessage = "Version 1.19 - Welcome to the latest version of Todoist Mini. Sorry that the app has been broken for a lot of users for a while now, it should be working again! You will have to relogin with your account as the app has been upgraded to todoist's latest API and has completely new authentication.\n\nNote for IPhone users: you may get an error: Safari cannot open this page as it is invalid upon login. I am unsure of why this happens but it seems to correct it if you remove and reinstall the pebble app, so give this a try. If you are still having problems let me know.";
 
 char *translate_error(AppMessageResult result) {
   switch (result) {
