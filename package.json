@@ -25,6 +25,7 @@
             "PROJECT_NAMES": 0,
             "SELECTED_ITEM": 5,
             "SELECTED_ITEM_RECURRING": 12,
+            "SELECTED_ITEM_UNCOMPLETE": 17,
             "SELECTED_PROJECT": 2,
             "TIMELINE_COMPLETE": 9,
             "WAITING": 6
@@ -51,5 +52,5 @@
             "watchface": false
         }
     },
-    "version": "1.19.0"
+    "version": "1.21.0"
 }

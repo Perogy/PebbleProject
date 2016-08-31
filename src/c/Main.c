@@ -64,7 +64,9 @@ void sendItemIDToPhone(int index)
   
     if (wd->items->recurringTask[index])
         dict_write_cstring(iter, SELECTED_ITEM_RECURRING, wd->items->itemIDs[index]);
-    else 
+    else if (wd->items->checked[index])
+        dict_write_cstring(iter, SELECTED_ITEM_UNCOMPLETE, wd->items->itemIDs[index]);
+    else
         dict_write_cstring(iter, SELECTED_ITEM, wd->items->itemIDs[index]);
     
     dict_write_end(iter);

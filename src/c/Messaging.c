@@ -3,7 +3,7 @@
 #include "WindowData.h"
 #include "ErrorWindow.h"
 
-char *userMessage = "Version 1.19 - Welcome to the latest version of Todoist Mini. Sorry that the app has been broken for a lot of users for a while now, it should be working again! You will have to relogin with your account as the app has been upgraded to todoist's latest API and has completely new authentication.\n\nNote for IPhone users: you may get an error: Safari cannot open this page as it is invalid upon login. I am unsure of why this happens but it seems to correct it if you remove and reinstall the pebble app, so give this a try. If you are still having problems let me know.";
+char *userMessage = "Version 1.21 - Welcome to the latest version of Todoist Mini. Sorry that the app has been broken for a lot of users for a while now, it should be working again! You will have to relogin with your account as the app has been upgraded to todoist's latest API and has completely new authentication.\n\n I've added item decompletion and moved the add new button to the top of the item list in this version. Hope you enjoy!";
 
 char *translate_error(AppMessageResult result) {
   switch (result) {
@@ -111,6 +111,22 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
                 else
                 {
                     displayMessage("Failed to mark item as completed. This may be due to a connection issue.", 101);
+                    window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
+                }
+            break;
+            case SELECTED_ITEM_UNCOMPLETE:
+                
+                if (strcmp(t->value->cstring,"1") == 0)
+                {
+                    MenuIndex currentIndex = menu_layer_get_selected_index(myMenuLayer);
+                    int currentRow = currentIndex.row;
+                    wd->items->checked[currentRow] = 0;
+                    window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
+                    layer_mark_dirty(menu_layer_get_layer(myMenuLayer));
+                }
+                else
+                {
+                    displayMessage("Failed to mark item as uncompleted. This may be due to a connection issue.", 101);
                     window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
                 }
             break;

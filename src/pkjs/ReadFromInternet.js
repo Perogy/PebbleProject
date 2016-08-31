@@ -134,6 +134,20 @@ function getItems(responseText)
         var itemIndentation = "";
         
     
+        //only put "Add New" if we are on basalt or chalk
+        if (getWatchVersion() == "basalt" || getWatchVersion() == "chalk")
+        {
+            //cannot add items to "Today" project so we only add the "Add New" button if it's not a today project
+            if (!isToday)
+            {
+                itemNames = itemNames + "+ Add New |";
+                itemIDs = itemIDs + "0|";
+                itemDates = itemDates + "|";
+                itemDueDates = itemDueDates + "|";
+                itemIndentation = itemIndentation + "1|";   
+            }
+        }
+    
         for(var i=0;i<json.length;i++)
         {
             if (isToday)
@@ -187,19 +201,7 @@ function getItems(responseText)
             }
         }
     
-        //only put "Add New" if we are on basalt or chalk
-        if (getWatchVersion() == "basalt" || getWatchVersion() == "chalk")
-        {
-            //cannot add items to "Today" project so we only add the "Add New" button if it's not a today project
-            if (!isToday)
-            {
-                itemNames = itemNames + "+ Add New |";
-                itemIDs = itemIDs + "0|";
-                itemDates = itemDates + "|";
-                itemDueDates = itemDueDates + "|";
-                itemIndentation = itemIndentation + "1|";   
-            }
-        }
+
     
         var dictionary = 
         {
@@ -469,6 +471,43 @@ function markRecurringItem(responseText)
     
 }
 
+function uncompleteItem(responseText)
+{
+    if (responseText.includes("ok"))
+    {
+        var dictionary = 
+        {
+            "SELECTED_ITEM_UNCOMPLETE": "1"
+        };
+        Pebble.sendAppMessage(dictionary,
+                          function(e) 
+                          {
+                              
+                          },
+                          function(e) 
+                          {
+                              sendErrorString(e.error.message);
+                          });   
+    }
+    else
+    {
+        var dictionary = 
+        {
+            "SELECTED_ITEM_UNCOMPLETE": "0"
+        };
+        Pebble.sendAppMessage(dictionary,
+                          function(e) 
+                          {
+                              
+                          },
+                          function(e) 
+                          {
+                              sendErrorString(e.error.message);
+                          });   
+    }
+    
+}
+
 function addItem(responseText)
 {
     //add response error handling here
@@ -609,7 +648,6 @@ function getProjectsFromToken()
 function getItemsForSelectedProject(projectID)
 {
     selectedProjectID = projectID;
-    console.log("\nprojectID: " + projectID);
     var url = "https://api.todoist.com/API/v7/sync?token=" + encodeURIComponent(localStorage.getItem("todoistMiniTokenV7")) + "&sync_token=" + encodeURIComponent("'*'") + "&resource_types=" + encodeURIComponent("[\"items\"]");
     xhrRequest(url, 'GET', getItems);
 }
@@ -697,6 +735,30 @@ function markRecurringItemAsCompleted(itemID)
     }
 }
 
+function markItemAsUncompleted(itemID)
+{
+    markCompletedUUID = createUUID();
+    markCompletedItemID = itemID;
+    var commandsjson = [{
+        "type": "item_uncomplete", 
+        "uuid": createUUID(), 
+        "args": 
+        {
+            "ids": [itemID]
+        }
+    }];
+    
+    var url = "https://todoist.com/API/v7/sync?token=" + encodeURIComponent(localStorage.getItem("todoistMiniTokenV7")) + "&commands=" + encodeURIComponent(JSON.stringify(commandsjson));
+    
+    xhrRequest(url, 'GET', uncompleteItem);
+    
+    if ((Pebble.getActiveWatchInfo().firmware.major >= 3) && isTimelineEnabled())
+    {
+        //update timeline pins if item uncompleted
+        pinTimelineItems();
+    }
+}
+
 
 // Listen for when the watchface is opened
 Pebble.addEventListener('ready', 
@@ -734,6 +796,10 @@ Pebble.addEventListener('appmessage',
     if(e.payload.SELECTED_ITEM_RECURRING)
     {
         markRecurringItemAsCompleted(e.payload.SELECTED_ITEM_RECURRING);
+    }
+    if(e.payload.SELECTED_ITEM_UNCOMPLETE)
+    {
+        markItemAsUncompleted(e.payload.SELECTED_ITEM_UNCOMPLETE);
     }
     if(e.payload.ADD_NEW_ITEM)
     {
