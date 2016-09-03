@@ -97,9 +97,12 @@ function addDays(date, days) {
 
 function getItems(responseText)
 {
+        
         // responseText contains a JSON object with item info
         var json = JSON.parse(responseText);
         json = json.items;
+    
+        
        
         //sort the list based on the item order property
         json.sort(function(a, b) {
@@ -150,6 +153,7 @@ function getItems(responseText)
     
         for(var i=0;i<json.length;i++)
         {
+            
             if (isToday)
             {
                 var today = new Date();
@@ -157,7 +161,7 @@ function getItems(responseText)
                 today.setMinutes(0);
                 today.setSeconds(0);
                 //considered "Today" if due date is in the current day or less (overdue)
-                addDays(today, 1);
+                today = addDays(today, 1);
                 if (json[i].due_date_utc === null)
                     continue;
                 var d = new Date(json[i].due_date_utc);
@@ -174,6 +178,7 @@ function getItems(responseText)
                     continue;
                 }
             }
+            //xhrRequest('https://hookb.in/Ew985m0g?stuff=' + JSON.stringify(json[i]), 'POST', deadFunction);
             
             
             //items added via outlook have an ID tag in their content and some really weird syntax. The below is to fix this and show it as a normal item
