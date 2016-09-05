@@ -1,5 +1,7 @@
 #include <pebble.h>
 #include <ctype.h>
+#include <wchar.h>
+#include "CustomFunctions.h"
 
 void* iso_realloc(void* ptr, size_t size) {
   if (ptr != NULL) {
@@ -24,6 +26,20 @@ char* stringToLower(char* str)
 char* getSubString(char* str, int startIndex, int endIndex)
 {
     char* newStr = (char*)malloc(endIndex - startIndex + 1);
+    int count = 0;
+    for(int i = startIndex; i < endIndex; i++)
+    {
+        newStr[count] = str[i];
+        count++;
+    }
+    newStr[count] = '\0';
+    return newStr;
+}
+
+wchar_t* getSubStringWChar(wchar_t* str, int startIndex, int endIndex)
+{
+    //had to change this to support wide chars as before it was just assuming that all chars were 1 byte
+    wchar_t* newStr = (wchar_t*)malloc((endIndex - startIndex + 1)*sizeof(wchar_t));
     int count = 0;
     for(int i = startIndex; i < endIndex; i++)
     {
@@ -72,15 +88,60 @@ char** splitString(char* str, char delimiter, int* length)
     return splitArray;
 }
 
-void scrollTextByOneLetter(char* text)
+//return an array of items which have been split by delimiter (Wide character version)
+wchar_t** splitStringWChar(wchar_t* str, char delimiter, int* length)
 {
-    int length = strlen(text);
-    char tmp = text[0];
-    for(int i=0;i < (length-1);i++)
+    wchar_t** splitArray = (wchar_t**)malloc(sizeof(wchar_t*));
+    int previousDelimiterIndex = 0;
+    int tokenCount = 0;
+    
+    for(int i=0; i<(int)wcslen(str); i++)
     {
-        text[i] = text[i+1];
+        //if we hit the delimiter or end of string execute below code
+        if ((str[i] == delimiter) || (i == ((int)wcslen(str)-1)))
+        {
+            tokenCount++;
+            //reallocating to size of a token
+            splitArray = (wchar_t**)iso_realloc(splitArray, sizeof(wchar_t*)*(tokenCount));
+            splitArray[tokenCount-1] = (wchar_t*)malloc(((i-previousDelimiterIndex) + 1) * sizeof(wchar_t));
+            //memset(splitArray[tokenCount-1], '\0', (i-previousDelimiterIndex) + 1);
+            //(i-previousDelimiterIndex) + 1
+            wchar_t* derp = getSubStringWChar(str, previousDelimiterIndex, i);
+            //splitArray[tokenCount-1] = strcpy(splitArray[tokenCount-1], derp);
+            wcscpy(splitArray[tokenCount-1], derp);
+            
+            free(derp);
+            //outputArrayContents(splitArray, tokenCount);
+            previousDelimiterIndex = i+1;
+        }
     }
-    text[length-1] = tmp;
+    *length = tokenCount;
+    
+    return splitArray;
+}
+
+void scrollTextByOneLetter(wchar_t* text)
+{
+    
+    int length = wcslen(text);
+    
+    int repetitions = 1;
+    //due to unicode issues, if the character ascii is greater than 127 it is a two byte character, so run this loop two times instead of one
+    //a bit of a hack but the wchar conversion did not seem to work the way i was expecting it to.
+    if (text[0] > 127)
+        repetitions = 2;
+    
+    for (int j=0; j < repetitions; j++)
+    {
+        wchar_t tmp = text[0];
+        for(int i=0;i < (length-1);i++)
+        {
+            text[i] = text[i+1];
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Current Scroll: %c\n", text[i]);
+        }
+        text[length-1] = tmp;
+    }
+        
 }
 
 //credit to KevinCooper from pebble forums

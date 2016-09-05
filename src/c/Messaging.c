@@ -1,9 +1,12 @@
+#include <wchar.h>
 #include "Messaging.h"
 #include "Main.h"
 #include "WindowData.h"
 #include "ErrorWindow.h"
+#include "Projects.h"
+#include "Items.h"
 
-char *userMessage = "Version 1.21 - Welcome to the latest version of Todoist Mini. Sorry that the app has been broken for a lot of users for a while now, it should be working again! You will have to relogin with your account as the app has been upgraded to todoist's latest API and has completely new authentication.\n\n I've added item decompletion and moved the add new button to the top of the item list in this version. Hope you enjoy!";
+char *userMessage = "Version 1.23 - accented characters should now display correctly. Today list items will now order by date as they do in Todoist.";
 
 char *translate_error(AppMessageResult result) {
   switch (result) {
@@ -32,17 +35,17 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
     // Read first item
     Tuple *t = dict_read_first(iterator);
     
-    char* projectNamesStr = 0;
+    wchar_t* projectNamesStr = 0;
     char* projectIDsStr = 0;
     char* projectIndentationStr = 0;
-    char* itemNamesStr = 0;
+    wchar_t* itemNamesStr = 0;
     char* itemIDsStr = 0;
     char* itemDatesStr = 0;
     char* itemDueDatesStr = 0;
     char* itemIndentationStr = 0;
-    char* strTimeline = 0;
     char* configStr = 0;
     WindowData* wd = (WindowData*)window_get_user_data(window);
+    
     
     // For all items
     while(t != NULL) 
@@ -51,8 +54,11 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
         switch(t->key) 
         {
             case PROJECT_NAMES:
-                projectNamesStr = (char*)calloc(t->length, sizeof(char));
-                strcpy(projectNamesStr, t->value->cstring);
+                //experimenting with wide chars for different language text, maybe should be done better later
+                projectNamesStr = (wchar_t*)calloc(t->length, sizeof(wchar_t));
+                wchar_t* wideCStringProject = (wchar_t*)calloc(t->length, sizeof(wchar_t));
+                int result = mbstowcs (wideCStringProject, t->value->cstring, t->length);
+                wcscpy(projectNamesStr, wideCStringProject);
             break;
             case PROJECT_IDs:
                 projectIDsStr = (char*)calloc(t->length, sizeof(char));
@@ -63,8 +69,11 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
                 strcpy(projectIndentationStr, t->value->cstring);
             break;
             case ITEM_NAMES:
-                itemNamesStr = (char*)calloc(t->length, sizeof(char));
-                strcpy(itemNamesStr, t->value->cstring);
+                //experimenting with wide chars for different language text, maybe should be done better later
+                itemNamesStr = (wchar_t*)calloc(t->length, sizeof(wchar_t));
+                wchar_t* wideCStringItem = (wchar_t*)calloc(t->length, sizeof(wchar_t));
+                mbstowcs (wideCStringItem, t->value->cstring, t->length);
+                wcscpy(itemNamesStr, wideCStringItem);
             break;
             case ITEM_IDS:
                 itemIDsStr = (char*)calloc(t->length, sizeof(char));
@@ -197,6 +206,7 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
     {
         ProjectStruct* projectList = createEmptyProjectList();
         unSerializeProjectsString(projectList, projectNamesStr, projectIDsStr, projectIndentationStr);
+        
         setProjects(wd, projectList);
         menu_layer_reload_data(myMenuLayer);
         MenuIndex mi;

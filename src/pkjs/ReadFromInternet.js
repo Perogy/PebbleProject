@@ -104,16 +104,34 @@ function getItems(responseText)
     
         
        
-        //sort the list based on the item order property
-        json.sort(function(a, b) {
-            return parseInt(a.item_order) - parseInt(b.item_order);
-        });
+        
     
         var isToday = 0;
         //if selected project ID is 0 then it means "today" was selected
         if (selectedProjectID === 0)
         {
             isToday = 1;
+        }
+    
+        //sort the list based on the item order property, if today, sort by date
+        if (isToday)
+        {
+             json.sort(function(a, b) {
+                 var d1 = new Date(a.due_date_utc);
+                 var d2 = new Date(b.due_date_utc);
+                 if (d1 > d2)
+                     return 1;
+                 else if (d1 == d2)
+                     return 0;
+                 else
+                     return -1;
+            });   
+        }
+        else
+        {
+            json.sort(function(a, b) {
+                return parseInt(a.item_order) - parseInt(b.item_order);
+            });
         }
             
         if (json[0])
