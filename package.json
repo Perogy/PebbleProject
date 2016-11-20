@@ -37,6 +37,7 @@
                     "file": "images/TodoistMiniLogo.png",
                     "menuIcon": true,
                     "name": "TODOIST_MINI_LOGO",
+                    "targetPlatforms": null,
                     "type": "bitmap"
                 }
             ]
@@ -45,12 +46,14 @@
         "targetPlatforms": [
             "aplite",
             "basalt",
-            "chalk"
+            "chalk",
+            "diorite",
+            "emery"
         ],
         "uuid": "156ab4ed-c65c-4dca-ab42-af435f784aa1",
         "watchapp": {
             "watchface": false
         }
     },
-    "version": "1.23.0"
+    "version": "1.25.0"
 }

@@ -6,7 +6,7 @@
 #include "Projects.h"
 #include "Items.h"
 
-char *userMessage = "Version 1.23 - accented characters should now display correctly. Today list items will now order by date as they do in Todoist.";
+char *userMessage = "Version 1.25 - now compiles on Pebble Time 2!";
 
 char *translate_error(AppMessageResult result) {
   switch (result) {
@@ -35,10 +35,10 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
     // Read first item
     Tuple *t = dict_read_first(iterator);
     
-    wchar_t* projectNamesStr = 0;
+    char* projectNamesStr = 0;
     char* projectIDsStr = 0;
     char* projectIndentationStr = 0;
-    wchar_t* itemNamesStr = 0;
+    char* itemNamesStr = 0;
     char* itemIDsStr = 0;
     char* itemDatesStr = 0;
     char* itemDueDatesStr = 0;
@@ -54,11 +54,8 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
         switch(t->key) 
         {
             case PROJECT_NAMES:
-                //experimenting with wide chars for different language text, maybe should be done better later
-                projectNamesStr = (wchar_t*)calloc(t->length, sizeof(wchar_t));
-                wchar_t* wideCStringProject = (wchar_t*)calloc(t->length, sizeof(wchar_t));
-                int result = mbstowcs (wideCStringProject, t->value->cstring, t->length);
-                wcscpy(projectNamesStr, wideCStringProject);
+                projectNamesStr = (char*)calloc(t->length, sizeof(char));
+                strcpy(projectNamesStr, t->value->cstring);
             break;
             case PROJECT_IDs:
                 projectIDsStr = (char*)calloc(t->length, sizeof(char));
@@ -69,11 +66,8 @@ void inbox_received_callback(DictionaryIterator *iterator, void *context)
                 strcpy(projectIndentationStr, t->value->cstring);
             break;
             case ITEM_NAMES:
-                //experimenting with wide chars for different language text, maybe should be done better later
-                itemNamesStr = (wchar_t*)calloc(t->length, sizeof(wchar_t));
-                wchar_t* wideCStringItem = (wchar_t*)calloc(t->length, sizeof(wchar_t));
-                mbstowcs (wideCStringItem, t->value->cstring, t->length);
-                wcscpy(itemNamesStr, wideCStringItem);
+                itemNamesStr = (char*)calloc(t->length, sizeof(char));
+                strcpy(itemNamesStr, t->value->cstring);
             break;
             case ITEM_IDS:
                 itemIDsStr = (char*)calloc(t->length, sizeof(char));

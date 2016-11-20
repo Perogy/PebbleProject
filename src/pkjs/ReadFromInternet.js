@@ -156,7 +156,7 @@ function getItems(responseText)
         
     
         //only put "Add New" if we are on basalt or chalk
-        if (getWatchVersion() == "basalt" || getWatchVersion() == "chalk")
+        if (getWatchVersion() == "basalt" || getWatchVersion() == "chalk" || getWatchVersion() == "diorite" || getWatchVersion() == "emery")
         {
             //cannot add items to "Today" project so we only add the "Add New" button if it's not a today project
             if (!isToday)
@@ -422,7 +422,7 @@ function getProjects(responseText)
 
 function markItem(responseText)
 {
-    if (responseText.includes("ok"))
+    if (responseText.search("ok") > 0)
     {
         var dictionary = 
         {
@@ -459,7 +459,7 @@ function markItem(responseText)
 
 function markRecurringItem(responseText)
 {
-    if (responseText.includes("ok"))
+    if (responseText.search("ok") > 0)
     {
         var dictionary = 
         {
@@ -496,7 +496,7 @@ function markRecurringItem(responseText)
 
 function uncompleteItem(responseText)
 {
-    if (responseText.includes("ok"))
+    if (responseText.search("ok") > 0)
     {
         var dictionary = 
         {
@@ -784,23 +784,25 @@ function markItemAsUncompleted(itemID)
 
 
 // Listen for when the watchface is opened
-Pebble.addEventListener('ready', 
-    function(e) 
-    {
-        //enables timeline by default if it has never been set.
-        if (localStorage.getItem("timelineEnabled") === null)
-            localStorage.setItem("timelineEnabled", "true");
+Pebble.addEventListener('ready', startup);
 
-        if (localStorage.getItem("todoistMiniTokenV7") === null)
-        {
-            sendWaitingMessageAndPerformAction(1);
-        }
-        else
-        {
-            sendWaitingMessageAndPerformAction(2);
-        }
+function startup()
+{
+    //localStorage.removeItem("todoistMiniTokenV7");
+    //localStorage.setItem("todoistMiniTokenV7", "tokengoeshere");
+    //enables timeline by default if it has never been set.
+    if (localStorage.getItem("timelineEnabled") === null)
+        localStorage.setItem("timelineEnabled", "true");
+
+    if (localStorage.getItem("todoistMiniTokenV7") === null)
+    {
+        sendWaitingMessageAndPerformAction(1);
     }
-);
+    else
+    {
+        sendWaitingMessageAndPerformAction(2);
+    }
+}
 
 // Listen for when an AppMessage is received
 Pebble.addEventListener('appmessage',
@@ -878,12 +880,16 @@ function openConfig(e)
 }
 
 function closeConfig(e) {
-    
-    //pebble does not seem to handle encoded %2B properly (makes it a space instead of a plus sign)
-    //Possibly replace spaces with plus signs... unfortunately this would screw up anything that actually had a space in it (a password for example)
     try
     {
+        //if they pressed back on the settings screen (no save or login), just run the startup function
+        if (typeof(e.response) == "undefined")
+        {
+            startup();
+            return;
+        }
         var loginData = JSON.parse(decodeURIComponent(e.response));
+        
         
         if (loginData.type == "configData")
         {

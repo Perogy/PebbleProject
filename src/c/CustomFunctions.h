@@ -10,7 +10,7 @@ void outputArrayContents(char** array, int arrayLength);
 char** splitString(char* str, char delimiter, int* length);
 wchar_t** splitStringWChar(wchar_t* str, char delimiter, int* length);
 wchar_t* getSubStringWChar(wchar_t* str, int startIndex, int endIndex);
-void scrollTextByOneLetter(wchar_t* text);
+void scrollTextByOneLetter(char* text);
 void loopingCopy(char* dst, char* src, int startIndex, int length);
 unsigned int HexStringToUInt(char const* hexstring);
 

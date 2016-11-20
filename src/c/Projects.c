@@ -1,6 +1,5 @@
 #include <pebble.h>
 #include "Projects.h"
-#include "CustomFunctions.h"
 
 ProjectStruct* createEmptyProjectList()
 {
@@ -11,7 +10,7 @@ ProjectStruct* createEmptyProjectList()
     projectList->length = 0;
     return projectList;
 }
-ProjectStruct* createProjectList(wchar_t** projects, char** projectIDs, char** indentation, int length)
+ProjectStruct* createProjectList(char** projects, char** projectIDs, char** indentation, int length)
 {
     ProjectStruct* projectList = (ProjectStruct*)malloc(sizeof(ProjectStruct));
     projectList->projects = projects;
@@ -37,9 +36,9 @@ void destroyProjectList(ProjectStruct* ps)
     free(ps);
 }
 
-void unSerializeProjectsString(ProjectStruct* projectList, wchar_t* projectNamesString, char* projectIDsString, char* projectIndentationString)
+void unSerializeProjectsString(ProjectStruct* projectList, char* projectNamesString, char* projectIDsString, char* projectIndentationString)
 {
-    projectList->projects = splitStringWChar(projectNamesString, '|', &projectList->length);
+    projectList->projects = splitString(projectNamesString, '|', &projectList->length);
     projectList->projectIDs = splitString(projectIDsString, '|', &projectList->length);
     projectList->indentation = splitString(projectIndentationString, '|', &projectList->length);
 }

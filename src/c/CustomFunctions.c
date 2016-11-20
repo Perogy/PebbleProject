@@ -120,20 +120,19 @@ wchar_t** splitStringWChar(wchar_t* str, char delimiter, int* length)
     return splitArray;
 }
 
-void scrollTextByOneLetter(wchar_t* text)
+void scrollTextByOneLetter(char* text)
 {
     
-    int length = wcslen(text);
+    int length = strlen(text);
     
     int repetitions = 1;
     //due to unicode issues, if the character ascii is greater than 127 it is a two byte character, so run this loop two times instead of one
-    //a bit of a hack but the wchar conversion did not seem to work the way i was expecting it to.
     if (text[0] > 127)
         repetitions = 2;
     
     for (int j=0; j < repetitions; j++)
     {
-        wchar_t tmp = text[0];
+        char tmp = text[0];
         for(int i=0;i < (length-1);i++)
         {
             text[i] = text[i+1];

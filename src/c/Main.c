@@ -150,17 +150,14 @@ void draw_header_callback(GContext *ctx, Layer *cell_layer, uint16_t section_ind
         GRect cellBounds = layer_get_bounds(cell_layer);
         graphics_context_set_text_color(ctx, wd->config->altForegroundColor);
         
-        char* displayOutput = (char*)malloc(wcslen(wd->projects->projects[wd->selectedProjectIndex])*sizeof(wchar_t));
-        wcstombs(displayOutput, wd->projects->projects[wd->selectedProjectIndex], wcslen(wd->projects->projects[wd->selectedProjectIndex])*sizeof(wchar_t));
         #ifdef PBL_ROUND
             cellBounds.origin.x = cellBounds.origin.x + 12;
             cellBounds.size.w = cellBounds.size.w - 24;
-            graphics_draw_text(ctx, displayOutput, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+            graphics_draw_text(ctx, wd->projects->projects[wd->selectedProjectIndex], fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
         #else
             cellBounds.origin.x = cellBounds.origin.x + 8;
-            graphics_draw_text(ctx, displayOutput, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+            graphics_draw_text(ctx, wd->projects->projects[wd->selectedProjectIndex], fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
         #endif
-        free(displayOutput);
         graphics_context_set_stroke_color(ctx, wd->config->altForegroundColor);
         //graphics_draw_line(ctx,GPoint(cellBounds.origin.x,cellBounds.origin.y+cellBounds.size.h-1), GPoint(cellBounds.origin.x+cellBounds.size.w, cellBounds.origin.y+cellBounds.size.h-1));
     }
@@ -244,16 +241,13 @@ void draw_row_callback_round(GContext *ctx, Layer *cell_layer, MenuIndex *cell_i
                     graphics_fill_rect(ctx, cellBounds, 8, GCornersAll);
                     //graphics_draw_round_rect(ctx, cellBounds, 5);
                     
-                    char* displayOutput = (char*)malloc(wcslen(wd->projects->projects[i])*sizeof(wchar_t));
-                    wcstombs(displayOutput, wd->projects->projects[i], wcslen(wd->projects->projects[i])*sizeof(wchar_t));
                     
                     //if selected
                     if (cell_index->row == currentRow)
                     {
                         //increase cellbounds size so we can tell if the text will "overflow". if you dont do this the content size will stop at the end of the bounds
                         cellBounds.size.w = cellBounds.size.w*2.0;
-                        
-                        GSize textSize = graphics_text_layout_get_content_size(displayOutput, fonts_get_system_font(FONT_KEY_GOTHIC_18), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter);
+                        GSize textSize = graphics_text_layout_get_content_size(wd->projects->projects[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter);
                         cellBounds.size.w = cellBounds.size.w/2.0;
                         //snprintf(asdf, 100, "%d", textSize.w);
                         //displayErrorMessage(asdf);
@@ -267,8 +261,7 @@ void draw_row_callback_round(GContext *ctx, Layer *cell_layer, MenuIndex *cell_i
                         }
                     }
                     cellBounds.origin.x = cellBounds.origin.x + 3;
-                    graphics_draw_text(ctx, displayOutput, fonts_get_system_font(FONT_KEY_GOTHIC_18), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-                    free(displayOutput);
+                    graphics_draw_text(ctx, wd->projects->projects[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
                 }
             }
         }
@@ -336,12 +329,10 @@ void draw_row_callback_round(GContext *ctx, Layer *cell_layer, MenuIndex *cell_i
                     //fill rounded rect (Item space)
                     graphics_fill_rect(ctx, cellBounds, 8, GCornersAll);
 
-                    char* displayOutput = (char*)malloc(wcslen(wd->items->items[i])*sizeof(wchar_t));
-                    wcstombs(displayOutput, wd->items->items[i], wcslen(wd->items->items[i])*sizeof(wchar_t));
                     //if selected
                     if (cell_index->row == currentRow)
                     {
-                        GSize textSize = graphics_text_layout_get_content_size(displayOutput, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(cellBounds.origin.x, cellBounds.origin.y, cellBounds.size.w*2, 30), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
+                        GSize textSize = graphics_text_layout_get_content_size(wd->items->items[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(cellBounds.origin.x, cellBounds.origin.y, cellBounds.size.w*2, 30), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
                         //snprintf(asdf, 100, "%d", textSize.w);
                         //displayErrorMessage(asdf);
                         if (textSize.w >= (textBounds.size.w))
@@ -355,7 +346,7 @@ void draw_row_callback_round(GContext *ctx, Layer *cell_layer, MenuIndex *cell_i
                     }
                     textBounds.origin.x = textBounds.origin.x + 3;
                     
-                    graphics_draw_text(ctx, displayOutput, fonts_get_system_font(FONT_KEY_GOTHIC_18), textBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                    graphics_draw_text(ctx, wd->items->items[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), textBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
                     
                     //if it has a date draw the date
                     if (strcmp(wd->items->itemDates[cell_index->row], "") != 0)
@@ -367,7 +358,6 @@ void draw_row_callback_round(GContext *ctx, Layer *cell_layer, MenuIndex *cell_i
                     }
                     drawCheckbox(ctx, cell_layer, i);
                     //checkCheckbox(ctx, cell_layer, i);
-                    free(displayOutput);
                 }
             }
         }
@@ -380,6 +370,13 @@ void draw_row_callback_modern(GContext *ctx, Layer *cell_layer, MenuIndex *cell_
     #ifdef PBL_COLOR
         menu_layer_set_normal_colors(myMenuLayer, wd->config->altBackgroundColor, wd->config->altForegroundColor);
     #endif
+    
+    /*graphics_context_set_fill_color(ctx, GColorWhite);
+    GPoint* snowflakePoint = (GPoint*)malloc(sizeof(GPoint));
+    GPoint->x = 5;
+    GPoint->y = 5;
+    graphics_context_set_fill_color(ctx, wd->config->altBackgroundColor);
+    graphics_draw_pixel(ctx, snowflakePoint);*/
         
     if (!wd)
         return;
@@ -444,15 +441,12 @@ void draw_row_callback_modern(GContext *ctx, Layer *cell_layer, MenuIndex *cell_
                     //graphics_draw_round_rect(ctx, cellBounds, 5);
                     
                     
-                    char* displayOutput = (char*)malloc(wcslen(wd->projects->projects[i])*sizeof(wchar_t));
-                    wcstombs(displayOutput, wd->projects->projects[i], wcslen(wd->projects->projects[i])*sizeof(wchar_t));
-                    
                     //if selected
                     if (cell_index->row == currentRow)
                     {
                         //increase cellbounds size so we can tell if the text will "overflow". if you dont do this the content size will stop at the end of the bounds
                         cellBounds.size.w = cellBounds.size.w*2.0;
-                        GSize textSize = graphics_text_layout_get_content_size(displayOutput, fonts_get_system_font(FONT_KEY_GOTHIC_18), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
+                        GSize textSize = graphics_text_layout_get_content_size(wd->projects->projects[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
                         cellBounds.size.w = cellBounds.size.w/2.0;
                         //snprintf(asdf, 100, "%d", textSize.w);
                         //displayErrorMessage(asdf);
@@ -466,8 +460,7 @@ void draw_row_callback_modern(GContext *ctx, Layer *cell_layer, MenuIndex *cell_
                         }
                     }
                     cellBounds.origin.x = cellBounds.origin.x + 3;
-                    graphics_draw_text(ctx, displayOutput, fonts_get_system_font(FONT_KEY_GOTHIC_18), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
-                    free(displayOutput);
+                    graphics_draw_text(ctx, wd->projects->projects[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
                 }
             }
         }
@@ -535,14 +528,10 @@ void draw_row_callback_modern(GContext *ctx, Layer *cell_layer, MenuIndex *cell_
                     //fill rounded rect (Item space)
                     graphics_fill_rect(ctx, cellBounds, 5, GCornersAll);
 
-                    char* displayOutput = (char*)malloc(wcslen(wd->items->items[i])*sizeof(wchar_t));
-                    //snprintf(displayOutput, wcslen(wd->projects->projects[i])*sizeof(wchar_t), "%ls", wd->projects->projects[i]);
-                    wcstombs(displayOutput, wd->items->items[i], wcslen(wd->items->items[i])*sizeof(wchar_t));
-                    
                     //if selected
                     if (cell_index->row == currentRow)
                     {
-                        GSize textSize = graphics_text_layout_get_content_size(displayOutput, fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(cellBounds.origin.x, cellBounds.origin.y, cellBounds.size.w*2, 30), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
+                        GSize textSize = graphics_text_layout_get_content_size(wd->items->items[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(cellBounds.origin.x, cellBounds.origin.y, cellBounds.size.w*2, 30), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
                         //snprintf(asdf, 100, "%d", textSize.w);
                         //displayErrorMessage(asdf);
                         if (textSize.w >= (textBounds.size.w))
@@ -556,7 +545,7 @@ void draw_row_callback_modern(GContext *ctx, Layer *cell_layer, MenuIndex *cell_
                     }
                     textBounds.origin.x = textBounds.origin.x + 3;
                     
-                    graphics_draw_text(ctx, displayOutput, fonts_get_system_font(FONT_KEY_GOTHIC_18), textBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                    graphics_draw_text(ctx, wd->items->items[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), textBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
                     
                     //if it has a date draw the date
                     if (strcmp(wd->items->itemDates[cell_index->row], "") != 0)
@@ -568,7 +557,6 @@ void draw_row_callback_modern(GContext *ctx, Layer *cell_layer, MenuIndex *cell_
                     }
                     drawCheckbox(ctx, cell_layer, i);
                     //checkCheckbox(ctx, cell_layer, i);
-                    free(displayOutput);
                 }
             }
         }
@@ -643,7 +631,7 @@ void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, 
                     {
                         //increase cellbounds size so we can tell if the text will "overflow". if you dont do this the content size will stop at the end of the bounds
                         cellBounds.size.w = cellBounds.size.w*2.0;
-                        GSize textSize = graphics_text_layout_get_content_size((char*)wd->projects->projects[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
+                        GSize textSize = graphics_text_layout_get_content_size(wd->projects->projects[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
                         cellBounds.size.w = cellBounds.size.w/2.0;
                         //snprintf(asdf, 100, "%d", textSize.w);
                         //displayErrorMessage(asdf);
@@ -657,7 +645,7 @@ void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, 
                         }
                     }
                     cellBounds.origin.x = cellBounds.origin.x + 3;
-                    graphics_draw_text(ctx, (char*)wd->projects->projects[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                    graphics_draw_text(ctx, wd->projects->projects[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), cellBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
                 }
             }
         }
@@ -727,7 +715,7 @@ void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, 
                     //if selected
                     if (cell_index->row == currentRow)
                     {
-                        GSize textSize = graphics_text_layout_get_content_size((char*)wd->items->items[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(cellBounds.origin.x, cellBounds.origin.y, cellBounds.size.w*2, 30), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
+                        GSize textSize = graphics_text_layout_get_content_size(wd->items->items[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), GRect(cellBounds.origin.x, cellBounds.origin.y, cellBounds.size.w*2, 30), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
                         //snprintf(asdf, 100, "%d", textSize.w);
                         //displayErrorMessage(asdf);
                         if (textSize.w >= (textBounds.size.w))
@@ -740,7 +728,7 @@ void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, 
                         }
                     }
                     textBounds.origin.x = textBounds.origin.x + 3;
-                    graphics_draw_text(ctx, (char*)wd->items->items[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), textBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                    graphics_draw_text(ctx, wd->items->items[i], fonts_get_system_font(FONT_KEY_GOTHIC_18), textBounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
                     
                     //if it has a date draw the date
                     if (strcmp(wd->items->itemDates[cell_index->row], "") != 0)
@@ -830,7 +818,7 @@ void timerTick(void* data)
     if (wd->currentPage == 1 && wd->currentScrollable)
     {
         scrollTextByOneLetter(wd->projects->projects[currentRow]);
-        if (wd->scrolledNumber == (int)wcslen(wd->projects->projects[currentRow]) - 1)
+        if (wd->scrolledNumber == (int)strlen(wd->projects->projects[currentRow]) - 1)
             wd->scrolledNumber = 0;
         else
             wd->scrolledNumber++;
@@ -838,11 +826,8 @@ void timerTick(void* data)
     }
     if (wd->currentPage == 2 && wd->currentScrollable)
     {
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Current Scroll: %s\n", wd->items->items[currentRow]);
         scrollTextByOneLetter(wd->items->items[currentRow]);
-        
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Current Scroll: %s\n", wd->items->items[currentRow]);
-        if (wd->scrolledNumber == (int)wcslen(wd->items->items[currentRow]) - 1)
+        if (wd->scrolledNumber == (int)strlen(wd->items->items[currentRow]) - 1)
             wd->scrolledNumber = 0;
         else
             wd->scrolledNumber++;
@@ -860,7 +845,7 @@ void scrollTextBackToStart()
         if (wd->currentPage == 1)
         {
             scrollTextByOneLetter(wd->projects->projects[currentIndex.row]);
-            if (wd->scrolledNumber == (int)wcslen(wd->projects->projects[currentIndex.row]) - 1)
+            if (wd->scrolledNumber == (int)strlen(wd->projects->projects[currentIndex.row]) - 1)
                 wd->scrolledNumber = 0;
             else
                 wd->scrolledNumber++;
@@ -868,7 +853,7 @@ void scrollTextBackToStart()
         if (wd->currentPage == 2)
         {
             scrollTextByOneLetter(wd->items->items[currentIndex.row]);
-            if (wd->scrolledNumber == (int)wcslen(wd->items->items[currentIndex.row]) - 1)
+            if (wd->scrolledNumber == (int)strlen(wd->items->items[currentIndex.row]) - 1)
                 wd->scrolledNumber = 0;
             else
                 wd->scrolledNumber++;
@@ -887,19 +872,21 @@ void config_provider(Window *window)
 
 void window_load(Window *window)
 {
-    int screenHeight = 168;
+    //int screenHeight = PBL_DISPLAY_HEIGHT;
     
     //status bar shows up by default on aplite, have to subtract it from our total space
     #ifndef PBL_COLOR
-        screenHeight = screenHeight - 16;
+        //screenHeight = screenHeight - 16;
     #endif
     if (!myMenuLayer)
     {
         #ifdef PBL_ROUND
-            myMenuLayer = menu_layer_create(GRect(0, 0, 180, 180));
+            //myMenuLayer = menu_layer_create(GRect(0, 0, 180, 180));
         #else
-            myMenuLayer = menu_layer_create(GRect(0, 0, 144, screenHeight));
+            //myMenuLayer = menu_layer_create(GRect(0, 0, 144, screenHeight));
         #endif
+        
+        myMenuLayer = menu_layer_create(GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT));
     }
     //removed this as we need a custom back button function
     //menu_layer_set_click_config_onto_window(myMenuLayer, window);
@@ -921,7 +908,7 @@ void window_load(Window *window)
     
     
     
-    #ifdef PBL_PLATFORM_CHALK
+    #ifdef PBL_ROUND
         MenuLayerCallbacks callbacks = 
         {
             .draw_row = (MenuLayerDrawRowCallback) draw_row_callback_round,
@@ -932,7 +919,7 @@ void window_load(Window *window)
             .get_header_height = (MenuLayerGetHeaderHeightCallback) menu_get_header_height_callback
         };
         menu_layer_set_callbacks(myMenuLayer, NULL, callbacks);
-    #elif PBL_PLATFORM_BASALT
+    #elif PBL_RECT && PBL_COLOR
         MenuLayerCallbacks callbacks = 
         {
             .draw_row = (MenuLayerDrawRowCallback) draw_row_callback_modern,

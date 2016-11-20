@@ -1,6 +1,5 @@
 #include <pebble.h>
 #include "Items.h"
-#include "CustomFunctions.h"
 
 ItemStruct* createEmptyItemList()
 {
@@ -15,7 +14,7 @@ ItemStruct* createEmptyItemList()
     itemList->recurringTask = 0;
     return itemList;
 }
-ItemStruct* createItemList(wchar_t** items, char** itemIDs, char** itemDates, char** itemDueDates, char** itemIndentation, int length)
+ItemStruct* createItemList(char** items, char** itemIDs, char** itemDates, char** itemDueDates, char** itemIndentation, int length)
 {
     ItemStruct* itemList = (ItemStruct*)malloc(sizeof(ItemStruct));
     itemList->items = items;
@@ -51,9 +50,9 @@ void destroyItemList(ItemStruct* is)
     free(is);
 }
 
-void unSerializeItemsString(ItemStruct* itemList, wchar_t* itemNamesString, char* itemIDsString, char* itemDatesString, char* itemDueDatesString, char* itemIndentationString)
+void unSerializeItemsString(ItemStruct* itemList, char* itemNamesString, char* itemIDsString, char* itemDatesString, char* itemDueDatesString, char* itemIndentationString)
 {
-    itemList->items = splitStringWChar(itemNamesString, '|', &itemList->length);
+    itemList->items = splitString(itemNamesString, '|', &itemList->length);
     itemList->itemIDs = splitString(itemIDsString, '|', &itemList->length);
     itemList->itemDates = splitString(itemDatesString, '|', &itemList->length);
     itemList->itemDueDates = splitString(itemDueDatesString, '|', &itemList->length);

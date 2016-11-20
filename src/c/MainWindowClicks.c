@@ -6,7 +6,7 @@
 #include "MainWindowClicks.h"
 #include "Messaging.h"
 
-#ifdef PBL_COLOR
+#ifdef PBL_MICROPHONE
     static DictationSession *s_dictation_session;
 
     char *translate_dictation_error(int status) {
@@ -68,7 +68,7 @@ void menu_select_callback(ClickRecognizerRef recognizer, void *context)
         MenuIndex currentIndex = menu_layer_get_selected_index(myMenuLayer);
         int currentRow = currentIndex.row;
         
-        #ifdef PBL_COLOR
+        #ifdef PBL_MICROPHONE
         
             WindowData* wd = (WindowData*)window_get_user_data(window);
             //if item is "Add New" (item id will be zero if it's add new)
@@ -102,7 +102,6 @@ void up_click_handler(ClickRecognizerRef recognizer, void *context)
     if (currentIndex.row > 0)
     {
         app_timer_cancel(wd->textScrollTimer);
-        //this will not work when it STARTS on a scrollable text field, needs to be fixed
         scrollTextBackToStart();
         currentIndex.row--;
         menu_layer_set_selected_index(myMenuLayer, currentIndex, MenuRowAlignCenter, false);
