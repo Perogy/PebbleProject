@@ -8,7 +8,7 @@ Todoist Mini is an unofficial pebble watch app for the popular productivity soft
 
 * Log in to your account via google or standard Todoist login.
 
-* Scrolling Text for items that overflow the width of the screen, the scroll speed is customizable via the config screen.
+* Scrolling text for items that overflow the width of the screen, the scroll speed is customizable via the config screen.
 
 * Completely customizable colors! Create your own style of interface using any of Pebble's 64 supported colors.
 
