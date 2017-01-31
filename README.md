@@ -22,7 +22,7 @@ Todoist Mini is an unofficial pebble watch app for the popular productivity soft
 
 ## Development
 
-* All development thus far has been done through CloudPebble (https://cloudpebble.net/). If you would like to contribute simply go to cloudpebble, sign in to your account and press the "Import" button on the projects page. From this point you can select "Import from github" and enter the address of this repository to pull it down to CloudPebble.
+* All development thus far has been done through CloudPebble (https://cloudpebble.net/). If you would like to contribute simply go to CloudPebble, sign in to your account and press the "Import" button on the projects page. From this point you can select "Import from github" and enter the address of this repository to pull it down to CloudPebble.
 
 ## Contact
 * email:bradpaugh@gmail.com
